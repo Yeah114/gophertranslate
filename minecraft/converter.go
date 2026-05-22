@@ -84,7 +84,7 @@ func (c *MinecraftConverter) ConvertPacket(pk packet.Packet) (packet.Packet, err
 	case *packet.LevelChunk:
 		return c.ConvertLevelChunk(pkt)
 	case *packet.SubChunk:
-		return c.ConvertSubChunk(pkt)
+		return c.cc.ConvertSubChunk(pkt)
 	case *packet.ClientCacheMissResponse:
 		return c.ConvertClientCacheMissResponse(pkt)
 	case *packet.AddItemActor:

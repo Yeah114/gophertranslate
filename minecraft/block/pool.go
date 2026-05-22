@@ -2,11 +2,11 @@ package block
 
 import (
 	"github.com/Yeah114/bedrock-world-operator/block"
-	"github.com/Yeah114/gophertranslate/minecraft/block/v1v21v130"
-	"github.com/Yeah114/gophertranslate/minecraft/block/v1v26v0"
-	"github.com/Yeah114/gophertranslate/minecraft/block/v1v26v10"
-	"github.com/Yeah114/gophertranslate/minecraft/block/v1v26v20"
-	"github.com/Yeah114/gophertranslate/minecraft/block/v1v26v20v26"
+	"github.com/Yeah114/gopherconvert/minecraft/block/v1v21v130"
+	"github.com/Yeah114/gopherconvert/minecraft/block/v1v26v0"
+	"github.com/Yeah114/gopherconvert/minecraft/block/v1v26v10"
+	"github.com/Yeah114/gopherconvert/minecraft/block/v1v26v20"
+	"github.com/Yeah114/gopherconvert/minecraft/block/v1v26v20v26"
 	"github.com/Yeah114/gophertunnel/minecraft/protocol"
 )
 

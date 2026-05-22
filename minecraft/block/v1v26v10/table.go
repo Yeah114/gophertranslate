@@ -5,7 +5,7 @@ import (
 
 	"github.com/Yeah114/bedrock-world-operator/block"
 	"github.com/Yeah114/bedrock-world-operator/define"
-	"github.com/Yeah114/gophertranslate/minecraft/block/utils"
+	"github.com/Yeah114/gopherconvert/minecraft/block/utils"
 )
 
 var (

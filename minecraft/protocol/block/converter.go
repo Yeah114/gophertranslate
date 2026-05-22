@@ -3,28 +3,28 @@ package block
 import (
 	"fmt"
 
-	minecraft_block "github.com/Yeah114/gophertranslate/minecraft/block"
-	"github.com/Yeah114/gophertranslate/minecraft/utils"
+	minecraft_block "github.com/Yeah114/gopherconvert/minecraft/block"
+	"github.com/Yeah114/gopherconvert/minecraft/utils"
 	"github.com/Yeah114/gophertunnel/minecraft/protocol"
 )
 
-// Converter converts protocol fields that hold block runtime IDs.
-type Converter struct {
+// BlockConverter converts protocol fields that hold block runtime IDs.
+type BlockConverter struct {
 	bc *minecraft_block.BlockConverter
 }
 
-// NewConverter creates a new protocol block converter.
-func NewConverter(bc *minecraft_block.BlockConverter) *Converter {
-	return &Converter{bc: bc}
+// NewBlockConverter creates a new protocol block converter.
+func NewBlockConverter(bc *minecraft_block.BlockConverter) *BlockConverter {
+	return &BlockConverter{bc: bc}
 }
 
 // BlockConverter returns the underlying block converter.
-func (c *Converter) BlockConverter() *minecraft_block.BlockConverter {
+func (c *BlockConverter) BlockConverter() *minecraft_block.BlockConverter {
 	return c.bc
 }
 
 // ConvertBlockRuntimeID converts a block runtime ID from the source protocol to the destination protocol.
-func (c *Converter) ConvertBlockRuntimeID(srcBlockRuntimeID uint32) (uint32, error) {
+func (c *BlockConverter) ConvertBlockRuntimeID(srcBlockRuntimeID uint32) (uint32, error) {
 	dstBlockRuntimeID, ok := c.bc.ConvertBlockRuntimeID(srcBlockRuntimeID)
 	if !ok {
 		return 0, fmt.Errorf("ConvertBlockRuntimeID: unknown source block runtime ID %d", srcBlockRuntimeID)
@@ -33,7 +33,7 @@ func (c *Converter) ConvertBlockRuntimeID(srcBlockRuntimeID uint32) (uint32, err
 }
 
 // ConvertBlockRuntimeIDInt32 converts an int32 block runtime ID.
-func (c *Converter) ConvertBlockRuntimeIDInt32(srcBlockRuntimeID int32) (int32, error) {
+func (c *BlockConverter) ConvertBlockRuntimeIDInt32(srcBlockRuntimeID int32) (int32, error) {
 	if srcBlockRuntimeID < 0 {
 		return srcBlockRuntimeID, nil
 	}
@@ -45,7 +45,7 @@ func (c *Converter) ConvertBlockRuntimeIDInt32(srcBlockRuntimeID int32) (int32, 
 }
 
 // ConvertItemStack converts the block runtime ID inside an ItemStack.
-func (c *Converter) ConvertItemStack(srcItemStack protocol.ItemStack) (protocol.ItemStack, error) {
+func (c *BlockConverter) ConvertItemStack(srcItemStack protocol.ItemStack) (protocol.ItemStack, error) {
 	dstItemStack := srcItemStack
 	if srcItemStack.NetworkID == 0 {
 		return dstItemStack, nil
@@ -59,7 +59,7 @@ func (c *Converter) ConvertItemStack(srcItemStack protocol.ItemStack) (protocol.
 }
 
 // ConvertItemInstance converts the block runtime ID inside an ItemInstance.
-func (c *Converter) ConvertItemInstance(srcItemInstance protocol.ItemInstance) (protocol.ItemInstance, error) {
+func (c *BlockConverter) ConvertItemInstance(srcItemInstance protocol.ItemInstance) (protocol.ItemInstance, error) {
 	dstStack, err := c.ConvertItemStack(srcItemInstance.Stack)
 	if err != nil {
 		return protocol.ItemInstance{}, fmt.Errorf("ConvertItemInstance: failed to convert stack: %w", err)
@@ -70,7 +70,7 @@ func (c *Converter) ConvertItemInstance(srcItemInstance protocol.ItemInstance) (
 }
 
 // ConvertCreativeGroup converts the block runtime ID inside a CreativeGroup icon.
-func (c *Converter) ConvertCreativeGroup(srcCreativeGroup protocol.CreativeGroup) (protocol.CreativeGroup, error) {
+func (c *BlockConverter) ConvertCreativeGroup(srcCreativeGroup protocol.CreativeGroup) (protocol.CreativeGroup, error) {
 	icon, err := c.ConvertItemStack(srcCreativeGroup.Icon)
 	if err != nil {
 		return protocol.CreativeGroup{}, fmt.Errorf("ConvertCreativeGroup: failed to convert icon: %w", err)
@@ -81,7 +81,7 @@ func (c *Converter) ConvertCreativeGroup(srcCreativeGroup protocol.CreativeGroup
 }
 
 // ConvertCreativeItem converts the block runtime ID inside a CreativeItem.
-func (c *Converter) ConvertCreativeItem(srcCreativeItem protocol.CreativeItem) (protocol.CreativeItem, error) {
+func (c *BlockConverter) ConvertCreativeItem(srcCreativeItem protocol.CreativeItem) (protocol.CreativeItem, error) {
 	item, err := c.ConvertItemStack(srcCreativeItem.Item)
 	if err != nil {
 		return protocol.CreativeItem{}, fmt.Errorf("ConvertCreativeItem: failed to convert item: %w", err)
@@ -92,7 +92,7 @@ func (c *Converter) ConvertCreativeItem(srcCreativeItem protocol.CreativeItem) (
 }
 
 // ConvertInventoryAction converts item block runtime IDs inside an InventoryAction.
-func (c *Converter) ConvertInventoryAction(srcInventoryAction protocol.InventoryAction) (protocol.InventoryAction, error) {
+func (c *BlockConverter) ConvertInventoryAction(srcInventoryAction protocol.InventoryAction) (protocol.InventoryAction, error) {
 	dstOldItem, err := c.ConvertItemInstance(srcInventoryAction.OldItem)
 	if err != nil {
 		return protocol.InventoryAction{}, fmt.Errorf("ConvertInventoryAction: failed to convert old item: %w", err)
@@ -108,7 +108,7 @@ func (c *Converter) ConvertInventoryAction(srcInventoryAction protocol.Inventory
 }
 
 // ConvertBlockChangeEntry converts the block runtime ID inside a BlockChangeEntry.
-func (c *Converter) ConvertBlockChangeEntry(srcBlockChangeEntry protocol.BlockChangeEntry) (protocol.BlockChangeEntry, error) {
+func (c *BlockConverter) ConvertBlockChangeEntry(srcBlockChangeEntry protocol.BlockChangeEntry) (protocol.BlockChangeEntry, error) {
 	dstBlockRuntimeID, err := c.ConvertBlockRuntimeID(srcBlockChangeEntry.BlockRuntimeID)
 	if err != nil {
 		return protocol.BlockChangeEntry{}, fmt.Errorf("ConvertBlockChangeEntry: failed to convert block runtime ID: %w", err)
@@ -119,7 +119,7 @@ func (c *Converter) ConvertBlockChangeEntry(srcBlockChangeEntry protocol.BlockCh
 }
 
 // ConvertUseItemTransactionData converts item and block runtime IDs inside UseItemTransactionData.
-func (c *Converter) ConvertUseItemTransactionData(srcData *protocol.UseItemTransactionData) (*protocol.UseItemTransactionData, error) {
+func (c *BlockConverter) ConvertUseItemTransactionData(srcData *protocol.UseItemTransactionData) (*protocol.UseItemTransactionData, error) {
 	actions, err := utils.ConvertSliceWithError(srcData.Actions, c.ConvertInventoryAction)
 	if err != nil {
 		return nil, fmt.Errorf("ConvertUseItemTransactionData: failed to convert actions: %w", err)
@@ -140,7 +140,7 @@ func (c *Converter) ConvertUseItemTransactionData(srcData *protocol.UseItemTrans
 }
 
 // ConvertUseItemOnEntityTransactionData converts item block runtime IDs inside UseItemOnEntityTransactionData.
-func (c *Converter) ConvertUseItemOnEntityTransactionData(srcData *protocol.UseItemOnEntityTransactionData) (*protocol.UseItemOnEntityTransactionData, error) {
+func (c *BlockConverter) ConvertUseItemOnEntityTransactionData(srcData *protocol.UseItemOnEntityTransactionData) (*protocol.UseItemOnEntityTransactionData, error) {
 	heldItem, err := c.ConvertItemInstance(srcData.HeldItem)
 	if err != nil {
 		return nil, fmt.Errorf("ConvertUseItemOnEntityTransactionData: failed to convert held item: %w", err)
@@ -151,7 +151,7 @@ func (c *Converter) ConvertUseItemOnEntityTransactionData(srcData *protocol.UseI
 }
 
 // ConvertReleaseItemTransactionData converts item block runtime IDs inside ReleaseItemTransactionData.
-func (c *Converter) ConvertReleaseItemTransactionData(srcData *protocol.ReleaseItemTransactionData) (*protocol.ReleaseItemTransactionData, error) {
+func (c *BlockConverter) ConvertReleaseItemTransactionData(srcData *protocol.ReleaseItemTransactionData) (*protocol.ReleaseItemTransactionData, error) {
 	heldItem, err := c.ConvertItemInstance(srcData.HeldItem)
 	if err != nil {
 		return nil, fmt.Errorf("ConvertReleaseItemTransactionData: failed to convert held item: %w", err)
@@ -162,7 +162,7 @@ func (c *Converter) ConvertReleaseItemTransactionData(srcData *protocol.ReleaseI
 }
 
 // ConvertWaxedOrUnwaxedCopperEvent converts the copper block runtime ID inside WaxedOrUnwaxedCopperEvent.
-func (c *Converter) ConvertWaxedOrUnwaxedCopperEvent(srcEvent *protocol.WaxedOrUnwaxedCopperEvent) (*protocol.WaxedOrUnwaxedCopperEvent, error) {
+func (c *BlockConverter) ConvertWaxedOrUnwaxedCopperEvent(srcEvent *protocol.WaxedOrUnwaxedCopperEvent) (*protocol.WaxedOrUnwaxedCopperEvent, error) {
 	dstCopperBlockID, err := c.ConvertBlockRuntimeIDInt32(srcEvent.CopperBlockID)
 	if err != nil {
 		return nil, fmt.Errorf("ConvertWaxedOrUnwaxedCopperEvent: failed to convert copper block ID: %w", err)
@@ -173,7 +173,7 @@ func (c *Converter) ConvertWaxedOrUnwaxedCopperEvent(srcEvent *protocol.WaxedOrU
 }
 
 // ConvertBiomeDefinition converts block runtime IDs inside a BiomeDefinition.
-func (c *Converter) ConvertBiomeDefinition(srcBiomeDefinition protocol.BiomeDefinition) (protocol.BiomeDefinition, error) {
+func (c *BlockConverter) ConvertBiomeDefinition(srcBiomeDefinition protocol.BiomeDefinition) (protocol.BiomeDefinition, error) {
 	chunkGeneration, ok := srcBiomeDefinition.ChunkGeneration.Value()
 	if !ok {
 		return srcBiomeDefinition, nil
@@ -188,7 +188,7 @@ func (c *Converter) ConvertBiomeDefinition(srcBiomeDefinition protocol.BiomeDefi
 }
 
 // ConvertBiomeChunkGeneration converts block runtime IDs inside BiomeChunkGeneration.
-func (c *Converter) ConvertBiomeChunkGeneration(srcChunkGeneration protocol.BiomeChunkGeneration) (protocol.BiomeChunkGeneration, error) {
+func (c *BlockConverter) ConvertBiomeChunkGeneration(srcChunkGeneration protocol.BiomeChunkGeneration) (protocol.BiomeChunkGeneration, error) {
 	dstChunkGeneration := srcChunkGeneration
 
 	if mountainParameters, ok := srcChunkGeneration.MountainParameters.Value(); ok {
@@ -231,7 +231,7 @@ func (c *Converter) ConvertBiomeChunkGeneration(srcChunkGeneration protocol.Biom
 }
 
 // ConvertBiomeMountainParameters converts block runtime IDs inside BiomeMountainParameters.
-func (c *Converter) ConvertBiomeMountainParameters(srcParameters protocol.BiomeMountainParameters) (protocol.BiomeMountainParameters, error) {
+func (c *BlockConverter) ConvertBiomeMountainParameters(srcParameters protocol.BiomeMountainParameters) (protocol.BiomeMountainParameters, error) {
 	dstSteepBlock, err := c.ConvertBlockRuntimeIDInt32(srcParameters.SteepBlock)
 	if err != nil {
 		return protocol.BiomeMountainParameters{}, fmt.Errorf("ConvertBiomeMountainParameters: failed to convert steep block: %w", err)
@@ -242,7 +242,7 @@ func (c *Converter) ConvertBiomeMountainParameters(srcParameters protocol.BiomeM
 }
 
 // ConvertBiomeElementData converts block runtime IDs inside BiomeElementData.
-func (c *Converter) ConvertBiomeElementData(srcElementData protocol.BiomeElementData) (protocol.BiomeElementData, error) {
+func (c *BlockConverter) ConvertBiomeElementData(srcElementData protocol.BiomeElementData) (protocol.BiomeElementData, error) {
 	dstAdjustedMaterials, err := c.ConvertBiomeSurfaceMaterial(srcElementData.AdjustedMaterials)
 	if err != nil {
 		return protocol.BiomeElementData{}, fmt.Errorf("ConvertBiomeElementData: failed to convert adjusted materials: %w", err)
@@ -253,7 +253,7 @@ func (c *Converter) ConvertBiomeElementData(srcElementData protocol.BiomeElement
 }
 
 // ConvertBiomeSurfaceMaterial converts block runtime IDs inside BiomeSurfaceMaterial.
-func (c *Converter) ConvertBiomeSurfaceMaterial(srcSurfaceMaterial protocol.BiomeSurfaceMaterial) (protocol.BiomeSurfaceMaterial, error) {
+func (c *BlockConverter) ConvertBiomeSurfaceMaterial(srcSurfaceMaterial protocol.BiomeSurfaceMaterial) (protocol.BiomeSurfaceMaterial, error) {
 	topBlock, err := c.ConvertBlockRuntimeIDInt32(srcSurfaceMaterial.TopBlock)
 	if err != nil {
 		return protocol.BiomeSurfaceMaterial{}, fmt.Errorf("ConvertBiomeSurfaceMaterial: failed to convert top block: %w", err)
@@ -284,7 +284,7 @@ func (c *Converter) ConvertBiomeSurfaceMaterial(srcSurfaceMaterial protocol.Biom
 }
 
 // ConvertBiomeMesaSurface converts block runtime IDs inside BiomeMesaSurface.
-func (c *Converter) ConvertBiomeMesaSurface(srcMesaSurface protocol.BiomeMesaSurface) (protocol.BiomeMesaSurface, error) {
+func (c *BlockConverter) ConvertBiomeMesaSurface(srcMesaSurface protocol.BiomeMesaSurface) (protocol.BiomeMesaSurface, error) {
 	clayMaterial, err := c.ConvertBlockRuntimeID(srcMesaSurface.ClayMaterial)
 	if err != nil {
 		return protocol.BiomeMesaSurface{}, fmt.Errorf("ConvertBiomeMesaSurface: failed to convert clay material: %w", err)
@@ -300,7 +300,7 @@ func (c *Converter) ConvertBiomeMesaSurface(srcMesaSurface protocol.BiomeMesaSur
 }
 
 // ConvertBiomeCappedSurface converts block runtime IDs inside BiomeCappedSurface.
-func (c *Converter) ConvertBiomeCappedSurface(srcCappedSurface protocol.BiomeCappedSurface) (protocol.BiomeCappedSurface, error) {
+func (c *BlockConverter) ConvertBiomeCappedSurface(srcCappedSurface protocol.BiomeCappedSurface) (protocol.BiomeCappedSurface, error) {
 	floorBlocks, err := utils.ConvertSliceWithError(srcCappedSurface.FloorBlocks, c.ConvertBlockRuntimeIDInt32)
 	if err != nil {
 		return protocol.BiomeCappedSurface{}, fmt.Errorf("ConvertBiomeCappedSurface: failed to convert floor blocks: %w", err)

@@ -1,0 +1,62 @@
+{
+  "go.useLanguageServer": true,
+  "go.languageServerFlags": [
+    "-remote=auto"
+  ],
+  "go.toolsManagement.autoUpdate": true,
+  "gopls": {
+    "directoryFilters": [
+      "-**/.git",
+      "-**/.gradle",
+      "-**/target",
+      "-**/build",
+      "-**/dist",
+      "-**/node_modules"
+    ],
+    "staticcheck": false,
+    "vulncheck": "Off",
+    "semanticTokens": false,
+    "analysisProgressReporting": false,
+    "diagnosticsTrigger": "Save",
+    "diagnosticsDelay": "5s",
+    "completionBudget": "50ms",
+    "matcher": "FastFuzzy",
+    "experimentalPostfixCompletions": false,
+    "completeFunctionCalls": false,
+    "hoverKind": "SynopsisDocumentation",
+    "linksInHover": false,
+    "symbolScope": "workspace",
+    "analyses": {
+      "fieldalignment": false,
+      "nilness": false,
+      "unusedparams": false,
+      "unusedwrite": false,
+      "useany": false
+    },
+    "codelenses": {
+      "generate": false,
+      "regenerate_cgo": false,
+      "run_govulncheck": false,
+      "tidy": false,
+      "upgrade_dependency": false,
+      "vendor": false,
+      "vulncheck": false
+    }
+  },
+  "files.watcherExclude": {
+    "**/.git/**": true,
+    "**/.gradle/**": true,
+    "**/target/**": true,
+    "**/build/**": true,
+    "**/dist/**": true,
+    "**/node_modules/**": true
+  },
+  "search.exclude": {
+    "**/.git": true,
+    "**/.gradle": true,
+    "**/target": true,
+    "**/build": true,
+    "**/dist": true,
+    "**/node_modules": true
+  }
+}

@@ -5,7 +5,7 @@ import (
 	"unsafe"
 
 	"github.com/Yeah114/bedrock-world-operator/chunk"
-	"github.com/Yeah114/gophertranslate/minecraft/block"
+	"github.com/Yeah114/gopherconvert/minecraft/block"
 )
 
 //go:noescape

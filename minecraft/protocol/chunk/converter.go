@@ -6,8 +6,8 @@ import (
 
 	bwo_chunk "github.com/Yeah114/bedrock-world-operator/chunk"
 	"github.com/Yeah114/bedrock-world-operator/define"
-	"github.com/Yeah114/gophertranslate/minecraft/chunk"
-	"github.com/Yeah114/gophertranslate/minecraft/utils"
+	"github.com/Yeah114/gopherconvert/minecraft/chunk"
+	"github.com/Yeah114/gopherconvert/minecraft/utils"
 	"github.com/Yeah114/gophertunnel/minecraft/protocol"
 	"github.com/Yeah114/gophertunnel/minecraft/protocol/packet"
 )

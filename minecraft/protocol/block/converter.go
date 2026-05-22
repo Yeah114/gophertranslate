@@ -172,6 +172,18 @@ func (c *BlockConverter) ConvertWaxedOrUnwaxedCopperEvent(srcEvent *protocol.Wax
 	return &dstEvent, nil
 }
 
+// ConvertEvent converts block runtime IDs inside event data.
+func (c *BlockConverter) ConvertEvent(srcEvent protocol.Event) (protocol.Event, error) {
+	switch event := srcEvent.(type) {
+	case nil:
+		return nil, nil
+	case *protocol.WaxedOrUnwaxedCopperEvent:
+		return c.ConvertWaxedOrUnwaxedCopperEvent(event)
+	default:
+		return srcEvent, nil
+	}
+}
+
 // ConvertBiomeDefinition converts block runtime IDs inside a BiomeDefinition.
 func (c *BlockConverter) ConvertBiomeDefinition(srcBiomeDefinition protocol.BiomeDefinition) (protocol.BiomeDefinition, error) {
 	chunkGeneration, ok := srcBiomeDefinition.ChunkGeneration.Value()

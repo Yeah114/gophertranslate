@@ -93,7 +93,7 @@ func (c *MinecraftConverter) StartGameContext(ctx context.Context, data *minecra
 	c.bc = bc
 	c.cc = cc
 	c.ic = ic
-	vcs := version.GetVersionConverters(min(c.clientConn.Proto().ID(), c.serverConn.Proto().ID()))
+	vcs := version.GetVersionConverters(c.clientConn.Proto().ID(), c.serverConn.Proto().ID())
 	c.vcs = make([]define.VersionConverter, len(vcs))
 	for i, f := range vcs {
 		v := f(c)
@@ -225,8 +225,7 @@ func (c *MinecraftConverter) HandlePacket(pk packet.Packet, sender define.Conn) 
 		case *packet.ClientCacheMissResponse:
 			err = c.HandleClientCacheMissResponse(pkt)
 		case *packet.CraftingData:
-			// TODO: HandleCraftingData
-			err = nil
+			return c.HandleCraftingData(pkt)
 		case *packet.CreativeContent:
 			err = c.HandleCreativeContent(pkt)
 		case *packet.Event:

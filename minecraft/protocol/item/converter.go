@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	protocol_block "github.com/Yeah114/gopherconvert/minecraft/protocol/block"
+	"github.com/Yeah114/gopherconvert/minecraft/utils"
 	world_item "github.com/Yeah114/gopherconvert/minecraft/world/item"
 	"github.com/Yeah114/gophertunnel/minecraft/protocol"
 )
@@ -180,7 +181,7 @@ func (c *ItemConverter) ConvertServerInventoryAction(serverInventoryAction proto
 
 // ConvertClientUseItemTransactionData converts item and block runtime IDs inside UseItemTransactionData.
 func (c *ItemConverter) ConvertClientUseItemTransactionData(clientData *protocol.UseItemTransactionData) (*protocol.UseItemTransactionData, error) {
-	actions, err := convertSliceWithError(clientData.Actions, c.ConvertClientInventoryAction)
+	actions, err := utils.ConvertSliceWithError(clientData.Actions, c.ConvertClientInventoryAction)
 	if err != nil {
 		return nil, fmt.Errorf("ConvertClientUseItemTransactionData: failed to convert actions: %w", err)
 	}
@@ -201,7 +202,7 @@ func (c *ItemConverter) ConvertClientUseItemTransactionData(clientData *protocol
 
 // ConvertServerUseItemTransactionData converts item and block runtime IDs inside UseItemTransactionData.
 func (c *ItemConverter) ConvertServerUseItemTransactionData(serverData *protocol.UseItemTransactionData) (*protocol.UseItemTransactionData, error) {
-	actions, err := convertSliceWithError(serverData.Actions, c.ConvertServerInventoryAction)
+	actions, err := utils.ConvertSliceWithError(serverData.Actions, c.ConvertServerInventoryAction)
 	if err != nil {
 		return nil, fmt.Errorf("ConvertServerUseItemTransactionData: failed to convert actions: %w", err)
 	}
@@ -262,6 +263,317 @@ func (c *ItemConverter) ConvertServerReleaseItemTransactionData(serverData *prot
 	clientData := *serverData
 	clientData.HeldItem = heldItem
 	return &clientData, nil
+}
+
+// ConvertServerRecipe converts a recipe from the server protocol to the client protocol.
+func (c *ItemConverter) ConvertServerRecipe(serverRecipe protocol.Recipe) (protocol.Recipe, error) {
+	switch recipe := serverRecipe.(type) {
+	case *protocol.FurnaceRecipe:
+		dst, err := c.ConvertServerFurnaceRecipe(recipe)
+		if err != nil {
+			return nil, fmt.Errorf("ConvertServerRecipe: %w", err)
+		}
+		return dst, nil
+	case *protocol.FurnaceDataRecipe:
+		dst, err := c.ConvertServerFurnaceDataRecipe(recipe)
+		if err != nil {
+			return nil, fmt.Errorf("ConvertServerRecipe: %w", err)
+		}
+		return dst, nil
+	case *protocol.ShapelessRecipe:
+		dst, err := c.ConvertServerShapelessRecipe(recipe)
+		if err != nil {
+			return nil, fmt.Errorf("ConvertServerRecipe: %w", err)
+		}
+		return dst, nil
+	case *protocol.ShulkerBoxRecipe:
+		dst, err := c.ConvertServerShulkerBoxRecipe(recipe)
+		if err != nil {
+			return nil, fmt.Errorf("ConvertServerRecipe: %w", err)
+		}
+		return dst, nil
+	case *protocol.ShapelessChemistryRecipe:
+		dst, err := c.ConvertServerShapelessChemistryRecipe(recipe)
+		if err != nil {
+			return nil, fmt.Errorf("ConvertServerRecipe: %w", err)
+		}
+		return dst, nil
+	case *protocol.ShapedRecipe:
+		dst, err := c.ConvertServerShapedRecipe(recipe)
+		if err != nil {
+			return nil, fmt.Errorf("ConvertServerRecipe: %w", err)
+		}
+		return dst, nil
+	case *protocol.ShapedChemistryRecipe:
+		dst, err := c.ConvertServerShapedChemistryRecipe(recipe)
+		if err != nil {
+			return nil, fmt.Errorf("ConvertServerRecipe: %w", err)
+		}
+		return dst, nil
+	case *protocol.SmithingTransformRecipe:
+		dst, err := c.ConvertServerSmithingTransformRecipe(recipe)
+		if err != nil {
+			return nil, fmt.Errorf("ConvertServerRecipe: %w", err)
+		}
+		return dst, nil
+	case *protocol.SmithingTrimRecipe:
+		dst, err := c.ConvertServerSmithingTrimRecipe(recipe)
+		if err != nil {
+			return nil, fmt.Errorf("ConvertServerRecipe: %w", err)
+		}
+		return dst, nil
+	default:
+		return serverRecipe, nil
+	}
+}
+
+func (c *ItemConverter) ConvertServerFurnaceRecipe(recipe *protocol.FurnaceRecipe) (*protocol.FurnaceRecipe, error) {
+	inputType := recipe.InputType
+	inputRuntimeID, err := c.ConvertServerItemRuntimeID(inputType.NetworkID)
+	if err != nil {
+		return nil, fmt.Errorf("ConvertServerFurnaceRecipe: failed to convert input item runtime ID: %w", err)
+	}
+	output, err := c.ConvertServerItemStack(recipe.Output)
+	if err != nil {
+		return nil, fmt.Errorf("ConvertServerFurnaceRecipe: failed to convert output item stack: %w", err)
+	}
+	dst := *recipe
+	dst.InputType.NetworkID = inputRuntimeID
+	dst.Output = output
+	return &dst, nil
+}
+
+// ConvertServerFurnaceDataRecipe converts a furnace data recipe from the server protocol to the client protocol.
+func (c *ItemConverter) ConvertServerFurnaceDataRecipe(recipe *protocol.FurnaceDataRecipe) (*protocol.FurnaceDataRecipe, error) {
+	inputType := recipe.InputType
+	inputRuntimeID, err := c.ConvertServerItemRuntimeID(inputType.NetworkID)
+	if err != nil {
+		return nil, fmt.Errorf("ConvertServerFurnaceDataRecipe: failed to convert input item runtime ID: %w", err)
+	}
+	output, err := c.ConvertServerItemStack(recipe.Output)
+	if err != nil {
+		return nil, fmt.Errorf("ConvertServerFurnaceDataRecipe: failed to convert output item stack: %w", err)
+	}
+	dst := *recipe
+	dst.InputType.NetworkID = inputRuntimeID
+	dst.Output = output
+	return &dst, nil
+}
+
+// ConvertServerPotionRecipe converts a potion recipe from the server protocol to the client protocol.
+func (c *ItemConverter) ConvertServerPotionRecipe(serverRecipe protocol.PotionRecipe) (protocol.PotionRecipe, error) {
+	inputPotionID, err := c.ConvertServerItemRuntimeID(serverRecipe.InputPotionID)
+	if err != nil {
+		return protocol.PotionRecipe{}, fmt.Errorf("ConvertServerPotionRecipe: failed to convert input potion ID: %w", err)
+	}
+	reagentItemID, err := c.ConvertServerItemRuntimeID(serverRecipe.ReagentItemID)
+	if err != nil {
+		return protocol.PotionRecipe{}, fmt.Errorf("ConvertServerPotionRecipe: failed to convert reagent item ID: %w", err)
+	}
+	outputPotionID, err := c.ConvertServerItemRuntimeID(serverRecipe.OutputPotionID)
+	if err != nil {
+		return protocol.PotionRecipe{}, fmt.Errorf("ConvertServerPotionRecipe: failed to convert output potion ID: %w", err)
+	}
+	dst := serverRecipe
+	dst.InputPotionID = inputPotionID
+	dst.ReagentItemID = reagentItemID
+	dst.OutputPotionID = outputPotionID
+	return dst, nil
+}
+
+// ConvertServerPotionContainerChangeRecipe converts a potion container change recipe from the server protocol to the client protocol.
+func (c *ItemConverter) ConvertServerPotionContainerChangeRecipe(serverRecipe protocol.PotionContainerChangeRecipe) (protocol.PotionContainerChangeRecipe, error) {
+	inputItemID, err := c.ConvertServerItemRuntimeID(serverRecipe.InputItemID)
+	if err != nil {
+		return protocol.PotionContainerChangeRecipe{}, fmt.Errorf("ConvertServerPotionContainerChangeRecipe: failed to convert input item ID: %w", err)
+	}
+	reagentItemID, err := c.ConvertServerItemRuntimeID(serverRecipe.ReagentItemID)
+	if err != nil {
+		return protocol.PotionContainerChangeRecipe{}, fmt.Errorf("ConvertServerPotionContainerChangeRecipe: failed to convert reagent item ID: %w", err)
+	}
+	outputItemID, err := c.ConvertServerItemRuntimeID(serverRecipe.OutputItemID)
+	if err != nil {
+		return protocol.PotionContainerChangeRecipe{}, fmt.Errorf("ConvertServerPotionContainerChangeRecipe: failed to convert output item ID: %w", err)
+	}
+	dst := serverRecipe
+	dst.InputItemID = inputItemID
+	dst.ReagentItemID = reagentItemID
+	dst.OutputItemID = outputItemID
+	return dst, nil
+}
+
+// ConvertServerMaterialReducer converts a material reducer from the server protocol to the client protocol.
+func (c *ItemConverter) ConvertServerMaterialReducer(serverMaterialReducer protocol.MaterialReducer) (protocol.MaterialReducer, error) {
+	inputNetworkID, err := c.ConvertServerItemRuntimeID(serverMaterialReducer.InputItem.NetworkID)
+	if err != nil {
+		return protocol.MaterialReducer{}, fmt.Errorf("ConvertServerMaterialReducer: failed to convert input item ID: %w", err)
+	}
+	outputs, err := utils.ConvertSliceWithError(serverMaterialReducer.Outputs, c.ConvertServerMaterialReducerOutput)
+	if err != nil {
+		return protocol.MaterialReducer{}, fmt.Errorf("ConvertServerMaterialReducer: failed to convert outputs: %w", err)
+	}
+	dst := serverMaterialReducer
+	dst.InputItem.NetworkID = inputNetworkID
+	dst.Outputs = outputs
+	return dst, nil
+}
+
+func (c *ItemConverter) ConvertServerShapelessRecipe(recipe *protocol.ShapelessRecipe) (*protocol.ShapelessRecipe, error) {
+	input, err := utils.ConvertSliceWithError(recipe.Input, c.ConvertServerItemDescriptorCount)
+	if err != nil {
+		return nil, fmt.Errorf("ConvertServerShapelessRecipe: failed to convert input: %w", err)
+	}
+	output, err := utils.ConvertSliceWithError(recipe.Output, c.ConvertServerItemStack)
+	if err != nil {
+		return nil, fmt.Errorf("ConvertServerShapelessRecipe: failed to convert output: %w", err)
+	}
+	dst := *recipe
+	dst.Input = input
+	dst.Output = output
+	return &dst, nil
+}
+
+// ConvertServerShulkerBoxRecipe converts a shulker box recipe from the server protocol to the client protocol.
+func (c *ItemConverter) ConvertServerShulkerBoxRecipe(recipe *protocol.ShulkerBoxRecipe) (*protocol.ShulkerBoxRecipe, error) {
+	input, err := utils.ConvertSliceWithError(recipe.Input, c.ConvertServerItemDescriptorCount)
+	if err != nil {
+		return nil, fmt.Errorf("ConvertServerShulkerBoxRecipe: failed to convert input: %w", err)
+	}
+	output, err := utils.ConvertSliceWithError(recipe.Output, c.ConvertServerItemStack)
+	if err != nil {
+		return nil, fmt.Errorf("ConvertServerShulkerBoxRecipe: failed to convert output: %w", err)
+	}
+	dst := *recipe
+	dst.Input = input
+	dst.Output = output
+	return &dst, nil
+}
+
+// ConvertServerShapelessChemistryRecipe converts a shapeless chemistry recipe from the server protocol to the client protocol.
+func (c *ItemConverter) ConvertServerShapelessChemistryRecipe(recipe *protocol.ShapelessChemistryRecipe) (*protocol.ShapelessChemistryRecipe, error) {
+	input, err := utils.ConvertSliceWithError(recipe.Input, c.ConvertServerItemDescriptorCount)
+	if err != nil {
+		return nil, fmt.Errorf("ConvertServerShapelessChemistryRecipe: failed to convert input: %w", err)
+	}
+	output, err := utils.ConvertSliceWithError(recipe.Output, c.ConvertServerItemStack)
+	if err != nil {
+		return nil, fmt.Errorf("ConvertServerShapelessChemistryRecipe: failed to convert output: %w", err)
+	}
+	dst := *recipe
+	dst.Input = input
+	dst.Output = output
+	return &dst, nil
+}
+
+func (c *ItemConverter) ConvertServerShapedRecipe(recipe *protocol.ShapedRecipe) (*protocol.ShapedRecipe, error) {
+	input, err := utils.ConvertSliceWithError(recipe.Input, c.ConvertServerItemDescriptorCount)
+	if err != nil {
+		return nil, fmt.Errorf("ConvertServerShapedRecipe: failed to convert input: %w", err)
+	}
+	output, err := utils.ConvertSliceWithError(recipe.Output, c.ConvertServerItemStack)
+	if err != nil {
+		return nil, fmt.Errorf("ConvertServerShapedRecipe: failed to convert output: %w", err)
+	}
+	dst := *recipe
+	dst.Input = input
+	dst.Output = output
+	return &dst, nil
+}
+
+// ConvertServerShapedChemistryRecipe converts a shaped chemistry recipe from the server protocol to the client protocol.
+func (c *ItemConverter) ConvertServerShapedChemistryRecipe(recipe *protocol.ShapedChemistryRecipe) (*protocol.ShapedChemistryRecipe, error) {
+	input, err := utils.ConvertSliceWithError(recipe.Input, c.ConvertServerItemDescriptorCount)
+	if err != nil {
+		return nil, fmt.Errorf("ConvertServerShapedChemistryRecipe: failed to convert input: %w", err)
+	}
+	output, err := utils.ConvertSliceWithError(recipe.Output, c.ConvertServerItemStack)
+	if err != nil {
+		return nil, fmt.Errorf("ConvertServerShapedChemistryRecipe: failed to convert output: %w", err)
+	}
+	dst := *recipe
+	dst.Input = input
+	dst.Output = output
+	return &dst, nil
+}
+
+func (c *ItemConverter) ConvertServerSmithingTransformRecipe(recipe *protocol.SmithingTransformRecipe) (*protocol.SmithingTransformRecipe, error) {
+	template, err := c.ConvertServerItemDescriptorCount(recipe.Template)
+	if err != nil {
+		return nil, fmt.Errorf("ConvertServerSmithingTransformRecipe: failed to convert template: %w", err)
+	}
+	base, err := c.ConvertServerItemDescriptorCount(recipe.Base)
+	if err != nil {
+		return nil, fmt.Errorf("ConvertServerSmithingTransformRecipe: failed to convert base: %w", err)
+	}
+	addition, err := c.ConvertServerItemDescriptorCount(recipe.Addition)
+	if err != nil {
+		return nil, fmt.Errorf("ConvertServerSmithingTransformRecipe: failed to convert addition: %w", err)
+	}
+	result, err := c.ConvertServerItemStack(recipe.Result)
+	if err != nil {
+		return nil, fmt.Errorf("ConvertServerSmithingTransformRecipe: failed to convert result: %w", err)
+	}
+	dst := *recipe
+	dst.Template = template
+	dst.Base = base
+	dst.Addition = addition
+	dst.Result = result
+	return &dst, nil
+}
+
+func (c *ItemConverter) ConvertServerSmithingTrimRecipe(recipe *protocol.SmithingTrimRecipe) (*protocol.SmithingTrimRecipe, error) {
+	template, err := c.ConvertServerItemDescriptorCount(recipe.Template)
+	if err != nil {
+		return nil, fmt.Errorf("ConvertServerSmithingTrimRecipe: failed to convert template: %w", err)
+	}
+	base, err := c.ConvertServerItemDescriptorCount(recipe.Base)
+	if err != nil {
+		return nil, fmt.Errorf("ConvertServerSmithingTrimRecipe: failed to convert base: %w", err)
+	}
+	addition, err := c.ConvertServerItemDescriptorCount(recipe.Addition)
+	if err != nil {
+		return nil, fmt.Errorf("ConvertServerSmithingTrimRecipe: failed to convert addition: %w", err)
+	}
+	dst := *recipe
+	dst.Template = template
+	dst.Base = base
+	dst.Addition = addition
+	return &dst, nil
+}
+
+func (c *ItemConverter) ConvertServerItemDescriptorCount(item protocol.ItemDescriptorCount) (protocol.ItemDescriptorCount, error) {
+	descriptor, err := c.ConvertServerItemDescriptor(item.Descriptor)
+	if err != nil {
+		return protocol.ItemDescriptorCount{}, fmt.Errorf("ConvertServerItemDescriptorCount: failed to convert descriptor: %w", err)
+	}
+	dst := item
+	dst.Descriptor = descriptor
+	return dst, nil
+}
+
+func (c *ItemConverter) ConvertServerItemDescriptor(descriptor protocol.ItemDescriptor) (protocol.ItemDescriptor, error) {
+	switch descriptor := descriptor.(type) {
+	case *protocol.DefaultItemDescriptor:
+		runtimeID, err := c.ConvertServerItemRuntimeID(int32(descriptor.NetworkID))
+		if err != nil {
+			return nil, fmt.Errorf("ConvertServerItemDescriptor: failed to convert default descriptor runtime ID: %w", err)
+		}
+		dst := *descriptor
+		dst.NetworkID = int16(runtimeID)
+		return &dst, nil
+	default:
+		return descriptor, nil
+	}
+}
+
+func (c *ItemConverter) ConvertServerMaterialReducerOutput(output protocol.MaterialReducerOutput) (protocol.MaterialReducerOutput, error) {
+	networkID, err := c.ConvertServerItemRuntimeID(output.NetworkID)
+	if err != nil {
+		return protocol.MaterialReducerOutput{}, fmt.Errorf("ConvertServerMaterialReducerOutput: failed to convert network ID: %w", err)
+	}
+	dst := output
+	dst.NetworkID = networkID
+	return dst, nil
 }
 
 // ConvertClientInventoryTransactionData converts item and block runtime IDs inside InventoryTransactionData.
@@ -329,16 +641,4 @@ func (c *ItemConverter) ConvertUseItemOnEntityTransactionData(clientData *protoc
 // ConvertReleaseItemTransactionData converts item and block runtime IDs inside ReleaseItemTransactionData.
 func (c *ItemConverter) ConvertReleaseItemTransactionData(clientData *protocol.ReleaseItemTransactionData) (*protocol.ReleaseItemTransactionData, error) {
 	return c.ConvertClientReleaseItemTransactionData(clientData)
-}
-
-func convertSliceWithError[S ~[]E, E any](client S, convert func(E) (E, error)) (S, error) {
-	server := make(S, len(client))
-	for i, value := range client {
-		converted, err := convert(value)
-		if err != nil {
-			return nil, err
-		}
-		server[i] = converted
-	}
-	return server, nil
 }

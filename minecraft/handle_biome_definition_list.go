@@ -1,18 +1,19 @@
-package v1v26v10
+package minecraft
 
 import (
 	"fmt"
+
 	"github.com/Yeah114/gopherconvert/minecraft/utils"
 	"github.com/Yeah114/gophertunnel/minecraft/protocol/packet"
 )
 
-// ConvertBiomeDefinitionList converts block runtime IDs inside a BiomeDefinitionList packet.
-func (c *MinecraftConverter) ConvertBiomeDefinitionList(pk *packet.BiomeDefinitionList) (*packet.BiomeDefinitionList, error) {
-	biomeDefinitions, err := utils.ConvertSliceWithError(pk.BiomeDefinitions, c.bc.ConvertBiomeDefinition)
+// HandleBiomeDefinitionList converts and writes block runtime IDs inside a BiomeDefinitionList packet.
+func (c *MinecraftConverter) HandleBiomeDefinitionList(pk *packet.BiomeDefinitionList) error {
+	biomeDefinitions, err := utils.ConvertSliceWithError(pk.BiomeDefinitions, c.bc.ConvertServerBiomeDefinition)
 	if err != nil {
-		return nil, fmt.Errorf("ConvertBiomeDefinitionList: failed to convert biome definitions: %w", err)
+		return fmt.Errorf("HandleBiomeDefinitionList: failed to convert biome definitions: %w", err)
 	}
 	dst := *pk
 	dst.BiomeDefinitions = biomeDefinitions
-	return &dst, nil
+	return c.clientConnEcho.WritePacket(&dst)
 }

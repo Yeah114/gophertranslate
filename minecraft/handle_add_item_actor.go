@@ -1,17 +1,18 @@
-package v1v26v10
+package minecraft
 
 import (
 	"fmt"
+
 	"github.com/Yeah114/gophertunnel/minecraft/protocol/packet"
 )
 
-// ConvertAddItemActor converts item block runtime IDs inside an AddItemActor packet.
-func (c *MinecraftConverter) ConvertAddItemActor(pk *packet.AddItemActor) (*packet.AddItemActor, error) {
-	item, err := c.bc.ConvertItemInstance(pk.Item)
+// HandleAddItemActor converts and writes item block runtime IDs inside an AddItemActor packet.
+func (c *MinecraftConverter) HandleAddItemActor(pk *packet.AddItemActor) error {
+	item, err := c.ic.ConvertServerItemInstance(pk.Item)
 	if err != nil {
-		return nil, fmt.Errorf("ConvertAddItemActor: failed to convert item: %w", err)
+		return fmt.Errorf("HandleAddItemActor: failed to convert item: %w", err)
 	}
 	dst := *pk
 	dst.Item = item
-	return &dst, nil
+	return c.clientConnEcho.WritePacket(&dst)
 }

@@ -1,10 +1,10 @@
-package v1v26v10
+package minecraft
 
 import "github.com/Yeah114/gophertunnel/minecraft/protocol/packet"
 
-// ConvertStartGame adjusts StartGame block runtime ID compatibility fields.
-func (c *MinecraftConverter) ConvertStartGame(pk *packet.StartGame) (*packet.StartGame, error) {
+// HandleStartGame adjusts StartGame compatibility fields and writes the packet.
+func (c *MinecraftConverter) HandleStartGame(pk *packet.StartGame) error {
 	dst := *pk
-	dst.UseBlockNetworkIDHashes = c.dstTable.UseNetworkIDHashes()
-	return &dst, nil
+	dst.UseBlockNetworkIDHashes = c.serverTable.UseNetworkIDHashes()
+	return c.clientConnEcho.WritePacket(&dst)
 }

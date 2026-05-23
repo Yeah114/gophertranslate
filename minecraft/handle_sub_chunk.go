@@ -1,4 +1,4 @@
-package v1v26v10
+package minecraft
 
 import "github.com/Yeah114/gophertunnel/minecraft/protocol/packet"
 
@@ -8,5 +8,5 @@ func (c *MinecraftConverter) HandleSubChunk(pk *packet.SubChunk) error {
 	if err != nil {
 		return err
 	}
-	return c.dstConn.WritePacket(dst)
+	return c.clientConnEcho.WritePacket(dst)
 }

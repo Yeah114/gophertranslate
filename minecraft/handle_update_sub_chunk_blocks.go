@@ -1,23 +1,24 @@
-package v1v26v10
+package minecraft
 
 import (
 	"fmt"
+
 	"github.com/Yeah114/gopherconvert/minecraft/utils"
 	"github.com/Yeah114/gophertunnel/minecraft/protocol/packet"
 )
 
-// ConvertUpdateSubChunkBlocks converts an UpdateSubChunkBlocks packet.
-func (c *MinecraftConverter) ConvertUpdateSubChunkBlocks(pk *packet.UpdateSubChunkBlocks) (*packet.UpdateSubChunkBlocks, error) {
-	blocks, err := utils.ConvertSliceWithError(pk.Blocks, c.bc.ConvertBlockChangeEntry)
+// HandleUpdateSubChunkBlocks converts and writes an UpdateSubChunkBlocks packet.
+func (c *MinecraftConverter) HandleUpdateSubChunkBlocks(pk *packet.UpdateSubChunkBlocks) error {
+	blocks, err := utils.ConvertSliceWithError(pk.Blocks, c.bc.ConvertServerBlockChangeEntry)
 	if err != nil {
-		return nil, fmt.Errorf("ConvertUpdateSubChunkBlocks: failed to convert blocks: %w", err)
+		return fmt.Errorf("HandleUpdateSubChunkBlocks: failed to convert blocks: %w", err)
 	}
-	extra, err := utils.ConvertSliceWithError(pk.Extra, c.bc.ConvertBlockChangeEntry)
+	extra, err := utils.ConvertSliceWithError(pk.Extra, c.bc.ConvertServerBlockChangeEntry)
 	if err != nil {
-		return nil, fmt.Errorf("ConvertUpdateSubChunkBlocks: failed to convert extra blocks: %w", err)
+		return fmt.Errorf("HandleUpdateSubChunkBlocks: failed to convert extra blocks: %w", err)
 	}
 	dst := *pk
 	dst.Blocks = blocks
 	dst.Extra = extra
-	return &dst, nil
+	return c.clientConnEcho.WritePacket(&dst)
 }

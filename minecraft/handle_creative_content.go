@@ -1,23 +1,24 @@
-package v1v26v10
+package minecraft
 
 import (
 	"fmt"
+
 	"github.com/Yeah114/gopherconvert/minecraft/utils"
 	"github.com/Yeah114/gophertunnel/minecraft/protocol/packet"
 )
 
-// ConvertCreativeContent converts item block runtime IDs inside a CreativeContent packet.
-func (c *MinecraftConverter) ConvertCreativeContent(pk *packet.CreativeContent) (*packet.CreativeContent, error) {
-	groups, err := utils.ConvertSliceWithError(pk.Groups, c.bc.ConvertCreativeGroup)
+// HandleCreativeContent converts and writes item block runtime IDs inside a CreativeContent packet.
+func (c *MinecraftConverter) HandleCreativeContent(pk *packet.CreativeContent) error {
+	groups, err := utils.ConvertSliceWithError(pk.Groups, c.ic.ConvertServerCreativeGroup)
 	if err != nil {
-		return nil, fmt.Errorf("ConvertCreativeContent: failed to convert groups: %w", err)
+		return fmt.Errorf("HandleCreativeContent: failed to convert groups: %w", err)
 	}
-	items, err := utils.ConvertSliceWithError(pk.Items, c.bc.ConvertCreativeItem)
+	items, err := utils.ConvertSliceWithError(pk.Items, c.ic.ConvertServerCreativeItem)
 	if err != nil {
-		return nil, fmt.Errorf("ConvertCreativeContent: failed to convert items: %w", err)
+		return fmt.Errorf("HandleCreativeContent: failed to convert items: %w", err)
 	}
 	dst := *pk
 	dst.Groups = groups
 	dst.Items = items
-	return &dst, nil
+	return c.clientConnEcho.WritePacket(&dst)
 }

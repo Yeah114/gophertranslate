@@ -6,8 +6,8 @@ import (
 
 	bwo_chunk "github.com/Yeah114/bedrock-world-operator/chunk"
 	"github.com/Yeah114/bedrock-world-operator/define"
-	"github.com/Yeah114/gopherconvert/minecraft/chunk"
 	"github.com/Yeah114/gopherconvert/minecraft/utils"
+	"github.com/Yeah114/gopherconvert/minecraft/world/chunk"
 	"github.com/Yeah114/gophertunnel/minecraft/protocol"
 	"github.com/Yeah114/gophertunnel/minecraft/protocol/packet"
 )
@@ -42,168 +42,168 @@ func NewChunkConverter(
 }
 
 // ConvertSubChunkEntryRawPayload converts a sub chunk entry raw payload from one protocol version to another.
-func (c *ChunkConverter) ConvertSubChunkEntryRawPayload(srcSubChunkEntryRawPayload []byte, r define.Range) (dstSubChunkEntryRawPayload []byte, err error) {
+func (c *ChunkConverter) ConvertSubChunkEntryRawPayload(clientSubChunkEntryRawPayload []byte, r define.Range) (serverSubChunkEntryRawPayload []byte, err error) {
 	bc := c.cc.BlockConverter()
-	srcBuf := bytes.NewBuffer(srcSubChunkEntryRawPayload)
-	srcSubChunk, index, err := bwo_chunk.DecodeSubChunk(srcBuf, r, bwo_chunk.NetworkEncoding, bc.SrcTable())
+	clientBuf := bytes.NewBuffer(clientSubChunkEntryRawPayload)
+	clientSubChunk, index, err := bwo_chunk.DecodeSubChunk(clientBuf, r, bwo_chunk.NetworkEncoding, bc.ServerTable())
 	if err != nil {
 		return nil, fmt.Errorf("ConvertSubChunkEntryRawPayload: failed to decode source sub chunk: %w", err)
 	}
 
-	dstSubChunk, ok := c.cc.ConvertSubChunk(srcSubChunk)
+	serverSubChunk, ok := c.cc.ConvertSubChunk(clientSubChunk)
 	if !ok {
 		return nil, fmt.Errorf("ConvertSubChunkEntryRawPayload: failed to convert sub chunk")
 	}
-	dstSubChunkPayload := bwo_chunk.EncodeSubChunk(dstSubChunk, r, index, bwo_chunk.NetworkEncoding, bc.DstTable())
+	serverSubChunkPayload := bwo_chunk.EncodeSubChunk(serverSubChunk, r, index, bwo_chunk.NetworkEncoding, bc.ClientTable())
 
-	return append(dstSubChunkPayload, srcBuf.Bytes()...), nil
+	return append(serverSubChunkPayload, clientBuf.Bytes()...), nil
 }
 
 // ConvertSubChunkBlobPayload converts a cache blob payload holding a sub chunk from one protocol version to another.
-func (c *ChunkConverter) ConvertSubChunkBlobPayload(srcSubChunkBlobPayload []byte, r define.Range) (dstSubChunkBlobPayload []byte, err error) {
-	dstPayload, err := c.ConvertSubChunkEntryRawPayload(srcSubChunkBlobPayload, r)
+func (c *ChunkConverter) ConvertSubChunkBlobPayload(clientSubChunkBlobPayload []byte, r define.Range) (serverSubChunkBlobPayload []byte, err error) {
+	serverPayload, err := c.ConvertSubChunkEntryRawPayload(clientSubChunkBlobPayload, r)
 	if err != nil {
 		return nil, err
 	}
-	if len(dstPayload) == 0 {
+	if len(serverPayload) == 0 {
 		return nil, fmt.Errorf("ConvertSubChunkBlobPayload: empty converted payload")
 	}
-	return dstPayload, nil
+	return serverPayload, nil
 }
 
 // ConvertSubChunkEntry converts a sub chunk entry from one protocol version to another.
-func (c *ChunkConverter) ConvertSubChunkEntry(srcSubChunkEntry protocol.SubChunkEntry, r define.Range, cacheEnabled bool) (dstSubChunkEntry protocol.SubChunkEntry, err error) {
-	var dstRawPayload []byte
-	if len(srcSubChunkEntry.RawPayload) != 0 {
+func (c *ChunkConverter) ConvertSubChunkEntry(clientSubChunkEntry protocol.SubChunkEntry, r define.Range, cacheEnabled bool) (serverSubChunkEntry protocol.SubChunkEntry, err error) {
+	var serverRawPayload []byte
+	if len(clientSubChunkEntry.RawPayload) != 0 {
 		if cacheEnabled {
-			dstRawPayload = append([]byte{}, srcSubChunkEntry.RawPayload...)
+			serverRawPayload = append([]byte{}, clientSubChunkEntry.RawPayload...)
 		} else {
-			dstRawPayload, err = c.ConvertSubChunkEntryRawPayload(srcSubChunkEntry.RawPayload, r)
+			serverRawPayload, err = c.ConvertSubChunkEntryRawPayload(clientSubChunkEntry.RawPayload, r)
 			if err != nil {
 				return protocol.SubChunkEntry{}, fmt.Errorf("ConvertSubChunkEntry: failed to convert sub chunk entry raw payload: %w", err)
 			}
 		}
 	}
-	dstSubChunkEntry = protocol.SubChunkEntry{
-		Offset:              srcSubChunkEntry.Offset,
-		Result:              srcSubChunkEntry.Result,
-		RawPayload:          dstRawPayload,
-		HeightMapType:       srcSubChunkEntry.HeightMapType,
-		HeightMapData:       append([]int8{}, srcSubChunkEntry.HeightMapData...),
-		RenderHeightMapType: srcSubChunkEntry.RenderHeightMapType,
-		RenderHeightMapData: append([]int8{}, srcSubChunkEntry.RenderHeightMapData...),
-		BlobHash:            srcSubChunkEntry.BlobHash,
+	serverSubChunkEntry = protocol.SubChunkEntry{
+		Offset:              clientSubChunkEntry.Offset,
+		Result:              clientSubChunkEntry.Result,
+		RawPayload:          serverRawPayload,
+		HeightMapType:       clientSubChunkEntry.HeightMapType,
+		HeightMapData:       append([]int8{}, clientSubChunkEntry.HeightMapData...),
+		RenderHeightMapType: clientSubChunkEntry.RenderHeightMapType,
+		RenderHeightMapData: append([]int8{}, clientSubChunkEntry.RenderHeightMapData...),
+		BlobHash:            clientSubChunkEntry.BlobHash,
 	}
-	return dstSubChunkEntry, nil
+	return serverSubChunkEntry, nil
 }
 
 // ConvertSubChunk converts a sub chunk from one protocol version to another.
 // It returns the converted sub chunk and a error if the conversion was unsuccessful.
-func (c *ChunkConverter) ConvertSubChunk(srcSubChunk *packet.SubChunk) (dstSubChunk *packet.SubChunk, err error) {
-	r, found := c.Ranges[srcSubChunk.Dimension]
+func (c *ChunkConverter) ConvertSubChunk(clientSubChunk *packet.SubChunk) (serverSubChunk *packet.SubChunk, err error) {
+	r, found := c.Ranges[clientSubChunk.Dimension]
 	if !found {
-		return nil, fmt.Errorf("ConvertSubChunk: unsupported dimension: %d", srcSubChunk.Dimension)
+		return nil, fmt.Errorf("ConvertSubChunk: unsupported dimension: %d", clientSubChunk.Dimension)
 	}
-	subChunkEntries, err := utils.ConvertSliceWithError(srcSubChunk.SubChunkEntries, func(srcSubChunkEntry protocol.SubChunkEntry) (protocol.SubChunkEntry, error) {
-		return c.ConvertSubChunkEntry(srcSubChunkEntry, r, srcSubChunk.CacheEnabled)
+	subChunkEntries, err := utils.ConvertSliceWithError(clientSubChunk.SubChunkEntries, func(clientSubChunkEntry protocol.SubChunkEntry) (protocol.SubChunkEntry, error) {
+		return c.ConvertSubChunkEntry(clientSubChunkEntry, r, clientSubChunk.CacheEnabled)
 	})
 	if err != nil {
 		return nil, fmt.Errorf("ConvertSubChunk: failed to convert sub chunk entries: %w", err)
 	}
-	dstSubChunk = &packet.SubChunk{
-		CacheEnabled:    srcSubChunk.CacheEnabled,
-		Dimension:       srcSubChunk.Dimension,
-		Position:        srcSubChunk.Position,
+	serverSubChunk = &packet.SubChunk{
+		CacheEnabled:    clientSubChunk.CacheEnabled,
+		Dimension:       clientSubChunk.Dimension,
+		Position:        clientSubChunk.Position,
 		SubChunkEntries: subChunkEntries,
 	}
-	return dstSubChunk, nil
+	return serverSubChunk, nil
 }
 
 // ConvertLevelChunkRawPayload converts a LevelChunk raw payload from one protocol version to another.
-func (c *ChunkConverter) ConvertLevelChunkRawPayload(srcLevelChunkRawPayload []byte, subChunkCount uint32, r define.Range) (dstLevelChunkRawPayload []byte, err error) {
+func (c *ChunkConverter) ConvertLevelChunkRawPayload(clientLevelChunkRawPayload []byte, subChunkCount uint32, r define.Range) (serverLevelChunkRawPayload []byte, err error) {
 	bc := c.cc.BlockConverter()
-	srcBuf := bytes.NewBuffer(srcLevelChunkRawPayload)
-	dstChunk := bwo_chunk.NewChunk(bc.DstTable().AirRuntimeID(), r)
+	clientBuf := bytes.NewBuffer(clientLevelChunkRawPayload)
+	serverChunk := bwo_chunk.NewChunk(bc.ClientTable().AirRuntimeID(), r)
 
 	for i := uint32(0); i < subChunkCount; i++ {
-		srcSubChunk, index, err := bwo_chunk.DecodeSubChunk(srcBuf, r, bwo_chunk.NetworkEncoding, bc.SrcTable())
+		clientSubChunk, index, err := bwo_chunk.DecodeSubChunk(clientBuf, r, bwo_chunk.NetworkEncoding, bc.ServerTable())
 		if err != nil {
 			return nil, fmt.Errorf("ConvertLevelChunkRawPayload: failed to decode source sub chunk %d: %w", i, err)
 		}
-		dstSubChunk, ok := c.cc.ConvertSubChunk(srcSubChunk)
+		serverSubChunk, ok := c.cc.ConvertSubChunk(clientSubChunk)
 		if !ok {
 			return nil, fmt.Errorf("ConvertLevelChunkRawPayload: failed to convert sub chunk %d", i)
 		}
-		dstChunk.SetSubChunk(dstSubChunk, int16(index))
+		serverChunk.SetSubChunk(serverSubChunk, int16(index))
 	}
-	if err := bwo_chunk.DecodeBiomes(srcBuf, dstChunk, bwo_chunk.NetworkEncoding, bc.SrcTable()); err != nil {
+	if err := bwo_chunk.DecodeBiomes(clientBuf, serverChunk, bwo_chunk.NetworkEncoding, bc.ServerTable()); err != nil {
 		return nil, fmt.Errorf("ConvertLevelChunkRawPayload: failed to decode biomes: %w", err)
 	}
 
-	dstData := bwo_chunk.Encode(dstChunk, bwo_chunk.NetworkEncoding, bc.DstTable())
-	dstBuf := bytes.NewBuffer(make([]byte, 0, len(srcLevelChunkRawPayload)))
+	serverData := bwo_chunk.Encode(serverChunk, bwo_chunk.NetworkEncoding, bc.ClientTable())
+	serverBuf := bytes.NewBuffer(make([]byte, 0, len(clientLevelChunkRawPayload)))
 	for i := uint32(0); i < subChunkCount; i++ {
-		if int(i) >= len(dstData.SubChunks) {
-			return nil, fmt.Errorf("ConvertLevelChunkRawPayload: sub chunk count %d exceeds encoded sub chunk count %d", subChunkCount, len(dstData.SubChunks))
+		if int(i) >= len(serverData.SubChunks) {
+			return nil, fmt.Errorf("ConvertLevelChunkRawPayload: sub chunk count %d exceeds encoded sub chunk count %d", subChunkCount, len(serverData.SubChunks))
 		}
-		_, _ = dstBuf.Write(dstData.SubChunks[i])
+		_, _ = serverBuf.Write(serverData.SubChunks[i])
 	}
-	_, _ = dstBuf.Write(dstData.Biomes)
-	_, _ = dstBuf.Write(srcBuf.Bytes())
-	return dstBuf.Bytes(), nil
+	_, _ = serverBuf.Write(serverData.Biomes)
+	_, _ = serverBuf.Write(clientBuf.Bytes())
+	return serverBuf.Bytes(), nil
 }
 
 // ConvertLevelChunk converts a LevelChunk packet from one protocol version to another.
-func (c *ChunkConverter) ConvertLevelChunk(srcLevelChunk *packet.LevelChunk) (dstLevelChunk *packet.LevelChunk, err error) {
-	dstLevelChunk = &packet.LevelChunk{
-		Position:        srcLevelChunk.Position,
-		Dimension:       srcLevelChunk.Dimension,
-		HighestSubChunk: srcLevelChunk.HighestSubChunk,
-		SubChunkCount:   srcLevelChunk.SubChunkCount,
-		CacheEnabled:    srcLevelChunk.CacheEnabled,
-		BlobHashes:      append([]uint64{}, srcLevelChunk.BlobHashes...),
-		RawPayload:      append([]byte{}, srcLevelChunk.RawPayload...),
+func (c *ChunkConverter) ConvertLevelChunk(clientLevelChunk *packet.LevelChunk) (serverLevelChunk *packet.LevelChunk, err error) {
+	serverLevelChunk = &packet.LevelChunk{
+		Position:        clientLevelChunk.Position,
+		Dimension:       clientLevelChunk.Dimension,
+		HighestSubChunk: clientLevelChunk.HighestSubChunk,
+		SubChunkCount:   clientLevelChunk.SubChunkCount,
+		CacheEnabled:    clientLevelChunk.CacheEnabled,
+		BlobHashes:      append([]uint64{}, clientLevelChunk.BlobHashes...),
+		RawPayload:      append([]byte{}, clientLevelChunk.RawPayload...),
 	}
-	if srcLevelChunk.CacheEnabled || srcLevelChunk.SubChunkCount >= protocol.SubChunkRequestModeLimited {
-		return dstLevelChunk, nil
+	if clientLevelChunk.CacheEnabled || clientLevelChunk.SubChunkCount >= protocol.SubChunkRequestModeLimited {
+		return serverLevelChunk, nil
 	}
 
-	r, found := c.Ranges[srcLevelChunk.Dimension]
+	r, found := c.Ranges[clientLevelChunk.Dimension]
 	if !found {
-		return nil, fmt.Errorf("ConvertLevelChunk: unsupported dimension: %d", srcLevelChunk.Dimension)
+		return nil, fmt.Errorf("ConvertLevelChunk: unsupported dimension: %d", clientLevelChunk.Dimension)
 	}
-	dstRawPayload, err := c.ConvertLevelChunkRawPayload(srcLevelChunk.RawPayload, srcLevelChunk.SubChunkCount, r)
+	serverRawPayload, err := c.ConvertLevelChunkRawPayload(clientLevelChunk.RawPayload, clientLevelChunk.SubChunkCount, r)
 	if err != nil {
 		return nil, fmt.Errorf("ConvertLevelChunk: failed to convert raw payload: %w", err)
 	}
-	dstLevelChunk.RawPayload = dstRawPayload
-	return dstLevelChunk, nil
+	serverLevelChunk.RawPayload = serverRawPayload
+	return serverLevelChunk, nil
 }
 
 // ConvertCacheBlob converts a client cache blob from one protocol version to another.
-func (c *ChunkConverter) ConvertCacheBlob(srcBlob protocol.CacheBlob) (dstBlob protocol.CacheBlob, err error) {
+func (c *ChunkConverter) ConvertCacheBlob(clientBlob protocol.CacheBlob) (serverBlob protocol.CacheBlob, err error) {
 	r, found := c.Ranges[c.CurrentDimension]
 	if !found {
-		return dstBlob, fmt.Errorf("ConvertCacheBlob: unsupported dimension: %d", c.CurrentDimension)
+		return serverBlob, fmt.Errorf("ConvertCacheBlob: unsupported dimension: %d", c.CurrentDimension)
 	}
 
-	dstPayload, err := c.ConvertSubChunkBlobPayload(srcBlob.Payload, r)
+	serverPayload, err := c.ConvertSubChunkBlobPayload(clientBlob.Payload, r)
 	if err != nil {
 		return protocol.CacheBlob{
-			Hash:    srcBlob.Hash,
-			Payload: append([]byte{}, srcBlob.Payload...),
+			Hash:    clientBlob.Hash,
+			Payload: append([]byte{}, clientBlob.Payload...),
 		}, nil
 	}
 
 	return protocol.CacheBlob{
-		Hash:    srcBlob.Hash,
-		Payload: dstPayload,
+		Hash:    clientBlob.Hash,
+		Payload: serverPayload,
 	}, nil
 }
 
 // ConvertClientCacheMissResponse converts a ClientCacheMissResponse packet from one protocol version to another.
-func (c *ChunkConverter) ConvertClientCacheMissResponse(srcClientCacheMissResponse *packet.ClientCacheMissResponse) (dstClientCacheMissResponse *packet.ClientCacheMissResponse, err error) {
-	blobs, err := utils.ConvertSliceWithError(srcClientCacheMissResponse.Blobs, c.ConvertCacheBlob)
+func (c *ChunkConverter) ConvertClientCacheMissResponse(clientClientCacheMissResponse *packet.ClientCacheMissResponse) (serverClientCacheMissResponse *packet.ClientCacheMissResponse, err error) {
+	blobs, err := utils.ConvertSliceWithError(clientClientCacheMissResponse.Blobs, c.ConvertCacheBlob)
 	if err != nil {
 		return nil, fmt.Errorf("ConvertClientCacheMissResponse: failed to convert blobs: %w", err)
 	}

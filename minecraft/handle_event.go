@@ -1,17 +1,18 @@
-package v1v26v10
+package minecraft
 
 import (
 	"fmt"
+
 	"github.com/Yeah114/gophertunnel/minecraft/protocol/packet"
 )
 
-// ConvertEvent converts block runtime IDs inside an Event packet.
-func (c *MinecraftConverter) ConvertEvent(pk *packet.Event) (*packet.Event, error) {
-	eventData, err := c.bc.ConvertEvent(pk.Event)
+// HandleEvent converts and writes block runtime IDs inside an Event packet.
+func (c *MinecraftConverter) HandleEvent(pk *packet.Event) error {
+	eventData, err := c.bc.ConvertServerEvent(pk.Event)
 	if err != nil {
-		return nil, fmt.Errorf("ConvertEvent: failed to convert event data: %w", err)
+		return fmt.Errorf("HandleEvent: failed to convert event data: %w", err)
 	}
 	dst := *pk
 	dst.Event = eventData
-	return &dst, nil
+	return c.clientConnEcho.WritePacket(&dst)
 }

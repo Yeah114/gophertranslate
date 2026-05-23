@@ -1,17 +1,18 @@
-package v1v26v10
+package minecraft
 
 import (
 	"fmt"
+
 	"github.com/Yeah114/gophertunnel/minecraft/protocol/packet"
 )
 
-// ConvertUpdateBlock converts an UpdateBlock packet.
-func (c *MinecraftConverter) ConvertUpdateBlock(pk *packet.UpdateBlock) (*packet.UpdateBlock, error) {
-	newBlockRuntimeID, err := c.bc.ConvertBlockRuntimeID(pk.NewBlockRuntimeID)
+// HandleUpdateBlock converts and writes an UpdateBlock packet.
+func (c *MinecraftConverter) HandleUpdateBlock(pk *packet.UpdateBlock) error {
+	newBlockRuntimeID, err := c.bc.ConvertServerBlockRuntimeID(pk.NewBlockRuntimeID)
 	if err != nil {
-		return nil, fmt.Errorf("ConvertUpdateBlock: failed to convert new block runtime ID: %w", err)
+		return fmt.Errorf("HandleUpdateBlock: failed to convert new block runtime ID: %w", err)
 	}
 	dst := *pk
 	dst.NewBlockRuntimeID = newBlockRuntimeID
-	return &dst, nil
+	return c.clientConnEcho.WritePacket(&dst)
 }

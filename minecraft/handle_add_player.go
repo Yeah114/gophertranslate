@@ -1,17 +1,18 @@
-package v1v26v10
+package minecraft
 
 import (
 	"fmt"
+
 	"github.com/Yeah114/gophertunnel/minecraft/protocol/packet"
 )
 
-// ConvertAddPlayer converts item block runtime IDs inside an AddPlayer packet.
-func (c *MinecraftConverter) ConvertAddPlayer(pk *packet.AddPlayer) (*packet.AddPlayer, error) {
-	heldItem, err := c.bc.ConvertItemInstance(pk.HeldItem)
+// HandleAddPlayer converts and writes item block runtime IDs inside an AddPlayer packet.
+func (c *MinecraftConverter) HandleAddPlayer(pk *packet.AddPlayer) error {
+	heldItem, err := c.ic.ConvertServerItemInstance(pk.HeldItem)
 	if err != nil {
-		return nil, fmt.Errorf("ConvertAddPlayer: failed to convert held item: %w", err)
+		return fmt.Errorf("HandleAddPlayer: failed to convert held item: %w", err)
 	}
 	dst := *pk
 	dst.HeldItem = heldItem
-	return &dst, nil
+	return c.clientConnEcho.WritePacket(&dst)
 }

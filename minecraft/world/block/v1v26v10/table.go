@@ -1,11 +1,11 @@
-package v1v26v20
+package v1v26v10
 
 import (
 	_ "embed"
 
 	"github.com/Yeah114/bedrock-world-operator/block"
 	"github.com/Yeah114/bedrock-world-operator/define"
-	"github.com/Yeah114/gopherconvert/minecraft/block/utils"
+	"github.com/Yeah114/gopherconvert/minecraft/world/block/utils"
 )
 
 var (

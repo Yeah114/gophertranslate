@@ -5,7 +5,7 @@ import (
 	"unsafe"
 
 	"github.com/Yeah114/bedrock-world-operator/chunk"
-	"github.com/Yeah114/gopherconvert/minecraft/block"
+	"github.com/Yeah114/gopherconvert/minecraft/world/block"
 )
 
 //go:noescape
@@ -30,56 +30,56 @@ func (c *ChunkConverter) BlockConverter() *block.BlockConverter {
 
 // ConvertSubChunk converts a sub chunk from one protocol version to another.
 // It returns the converted sub chunk and a boolean indicating whether the conversion was successful.
-func (c *ChunkConverter) ConvertSubChunk(srcSubChunk *chunk.SubChunk) (dstSubChunk *chunk.SubChunk, ok bool) {
-	dstSubChunk = &chunk.SubChunk{}
-	memmove(unsafe.Pointer(dstSubChunk), unsafe.Pointer(srcSubChunk), unsafe.Sizeof(*srcSubChunk))
+func (c *ChunkConverter) ConvertSubChunk(clientSubChunk *chunk.SubChunk) (serverSubChunk *chunk.SubChunk, ok bool) {
+	serverSubChunk = &chunk.SubChunk{}
+	memmove(unsafe.Pointer(serverSubChunk), unsafe.Pointer(clientSubChunk), unsafe.Sizeof(*clientSubChunk))
 
-	dstAir := dstSubChunk.Air()
-	*dstAir, ok = c.bc.ConvertBlockRuntimeID(*dstAir)
+	serverAir := serverSubChunk.Air()
+	*serverAir, ok = c.bc.ConvertServerBlockRuntimeID(*serverAir)
 	if !ok {
 		return nil, false
 	}
 
 	ok = true
-	for _, storage := range srcSubChunk.Layers() {
-		storage.Palette().Replace(func(srcBlockRuntimeID uint32) uint32 {
-			dstBlockRuntimeID, found := c.bc.ConvertBlockRuntimeID(srcBlockRuntimeID)
+	for _, storage := range clientSubChunk.Layers() {
+		storage.Palette().Replace(func(clientBlockRuntimeID uint32) uint32 {
+			serverBlockRuntimeID, found := c.bc.ConvertServerBlockRuntimeID(clientBlockRuntimeID)
 			if !found {
 				ok = false
-				return srcBlockRuntimeID
+				return clientBlockRuntimeID
 			}
-			return dstBlockRuntimeID
+			return serverBlockRuntimeID
 		})
 		if !ok {
 			return nil, false
 		}
 	}
-	return dstSubChunk, true
+	return serverSubChunk, true
 }
 
 // ConvertChunk converts a chunk from one protocol version to another.
 // It returns the converted chunk and a boolean indicating whether the conversion was successful.
-func (c *ChunkConverter) ConvertChunk(srcChunk *chunk.Chunk) (dstChunk *chunk.Chunk, ok bool) {
-	dstChunk = &chunk.Chunk{}
-	memmove(unsafe.Pointer(dstChunk), unsafe.Pointer(srcChunk), unsafe.Sizeof(*srcChunk))
+func (c *ChunkConverter) ConvertChunk(clientChunk *chunk.Chunk) (serverChunk *chunk.Chunk, ok bool) {
+	serverChunk = &chunk.Chunk{}
+	memmove(unsafe.Pointer(serverChunk), unsafe.Pointer(clientChunk), unsafe.Sizeof(*clientChunk))
 
-	dstAir := dstChunk.Air()
-	*dstAir, ok = c.bc.ConvertBlockRuntimeID(*dstAir)
+	serverAir := serverChunk.Air()
+	*serverAir, ok = c.bc.ConvertServerBlockRuntimeID(*serverAir)
 	if !ok {
 		return nil, false
 	}
 
 	ok = true
-	for _, sub := range srcChunk.Sub() {
-		dstSub, subOk := c.ConvertSubChunk(sub)
+	for _, sub := range clientChunk.Sub() {
+		serverSub, subOk := c.ConvertSubChunk(sub)
 		if !subOk {
 			ok = false
 			break
 		}
-		sub = dstSub
+		sub = serverSub
 	}
 	if !ok {
 		return nil, false
 	}
-	return dstChunk, true
+	return serverChunk, true
 }

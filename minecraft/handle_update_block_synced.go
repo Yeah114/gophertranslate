@@ -1,17 +1,18 @@
-package v1v26v10
+package minecraft
 
 import (
 	"fmt"
+
 	"github.com/Yeah114/gophertunnel/minecraft/protocol/packet"
 )
 
-// ConvertUpdateBlockSynced converts an UpdateBlockSynced packet.
-func (c *MinecraftConverter) ConvertUpdateBlockSynced(pk *packet.UpdateBlockSynced) (*packet.UpdateBlockSynced, error) {
-	newBlockRuntimeID, err := c.bc.ConvertBlockRuntimeID(pk.NewBlockRuntimeID)
+// HandleUpdateBlockSynced converts and writes an UpdateBlockSynced packet.
+func (c *MinecraftConverter) HandleUpdateBlockSynced(pk *packet.UpdateBlockSynced) error {
+	newBlockRuntimeID, err := c.bc.ConvertServerBlockRuntimeID(pk.NewBlockRuntimeID)
 	if err != nil {
-		return nil, fmt.Errorf("ConvertUpdateBlockSynced: failed to convert new block runtime ID: %w", err)
+		return fmt.Errorf("HandleUpdateBlockSynced: failed to convert new block runtime ID: %w", err)
 	}
 	dst := *pk
 	dst.NewBlockRuntimeID = newBlockRuntimeID
-	return &dst, nil
+	return c.clientConnEcho.WritePacket(&dst)
 }

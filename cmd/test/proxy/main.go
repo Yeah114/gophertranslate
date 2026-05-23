@@ -1,15 +1,17 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
 	"log"
+	"log/slog"
 	"net"
 	"sync"
 	"time"
 
-	translator "github.com/Yeah114/gopherconvert/minecraft"
+	convert "github.com/Yeah114/gopherconvert/minecraft"
 	"github.com/Yeah114/gophertunnel/minecraft"
 	"github.com/Yeah114/gophertunnel/minecraft/protocol/packet"
 	"github.com/google/uuid"
@@ -22,9 +24,10 @@ const (
 
 func main() {
 	cfg := minecraft.ListenConfig{
+		ErrorLog:               slog.Default(),
 		AuthenticationDisabled: true,
 		AllowUnknownPackets:    true,
-		StatusProvider:         minecraft.NewStatusProvider("GopherTranslate Proxy", "GopherTranslate"),
+		StatusProvider:         minecraft.NewStatusProvider("GopherConvert Proxy", "GopherConvert"),
 	}
 	listener, err := cfg.Listen("raknet", listenAddress)
 	if err != nil {
@@ -49,8 +52,9 @@ func main() {
 func handleClient(clientConn *minecraft.Conn) {
 	defer clientConn.Close()
 
-	log.Printf("client %s joined from %s", clientConn.IdentityData().DisplayName, clientConn.RemoteAddr())
+	log.Printf("client %s joined from %s, version: %s", clientConn.IdentityData().DisplayName, clientConn.RemoteAddr(), clientConn.Proto().Ver())
 	dialer := minecraft.Dialer{
+		ErrorLog:                   slog.Default(),
 		IdentityData:               clientConn.IdentityData(),
 		ClientData:                 clientConn.ClientData(),
 		AutoProtocol:               true,
@@ -61,39 +65,45 @@ func handleClient(clientConn *minecraft.Conn) {
 		},
 	}
 
-	serverConn, err := dialer.Dial("raknet", serverAddress)
+	log.Printf("joining server: %s", serverAddress)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	defer cancel()
+	serverConn, err := dialer.DialContext(ctx, "raknet", serverAddress)
 	if err != nil {
 		log.Printf("dial server failed: %v", err)
 		return
 	}
 	defer serverConn.Close()
-
-	serverToClient, err := translator.NewMinecraftConverter(serverConn, clientConn)
-	if err != nil {
-		log.Printf("create server-to-client converter failed: %v", err)
-		return
-	}
-
-	if err := clientConn.StartGame(serverConn.GameData()); err != nil {
-		log.Printf("start client game failed: %v", err)
-		return
-	}
+	log.Printf("doing spawn on %s server...", serverConn.Proto().Ver())
 	if err := serverConn.DoSpawn(); err != nil {
 		log.Printf("spawn on server failed: %v", err)
 		return
 	}
 
-	clientToServer, err := translator.NewMinecraftConverter(clientConn, serverConn)
+	converter := convert.NewMinecraftConverter(clientConn, serverConn)
+	log.Print("starting client game...")
+	gameData := serverConn.GameData()
+	if err := converter.StartGameContext(ctx, &gameData); err != nil {
+		log.Printf("start client game failed: %v", err)
+		err = clientConn.WritePacket(&packet.Disconnect{
+			Reason:  packet.DisconnectReasonThirdPartyNoInternet,
+			Message: err.Error(),
+		})
+		if err != nil {
+			log.Printf("disconnect client failed: %v", err)
+		}
+	}
 	if err != nil {
-		log.Printf("create client-to-server converter failed: %v", err)
+		log.Printf("create converter failed: %v", err)
 		return
 	}
 
 	var wg sync.WaitGroup
 	errCh := make(chan error, 2)
 	wg.Add(2)
-	go forwardPackets(&wg, errCh, "server to client", serverConn, clientConn, serverToClient)
-	go forwardPackets(&wg, errCh, "client to server", clientConn, serverConn, clientToServer)
+	log.Print("start converting")
+	go forwardPackets(&wg, errCh, "server to client", serverConn, clientConn, converter)
+	go forwardPackets(&wg, errCh, "client to server", clientConn, serverConn, converter)
 
 	err = <-errCh
 	_ = clientConn.Close()
@@ -104,29 +114,18 @@ func handleClient(clientConn *minecraft.Conn) {
 	}
 }
 
-func forwardPackets(wg *sync.WaitGroup, errCh chan<- error, name string, src, dst *minecraft.Conn, converter *translator.MinecraftConverter) {
+func forwardPackets(wg *sync.WaitGroup, errCh chan<- error, name string, src, dst *minecraft.Conn, converter *convert.MinecraftConverter) {
 	defer wg.Done()
 	for {
-		if err := src.SetReadDeadline(time.Now().Add(time.Minute)); err != nil {
-			errCh <- fmt.Errorf("%s: set read deadline: %w", name, err)
-			return
-		}
 		pk, err := src.ReadPacket()
 		if err != nil {
 			errCh <- fmt.Errorf("%s: read packet: %w", name, err)
 			return
 		}
-		if err := writePacket(dst, converter, pk); err != nil {
+		err = converter.HandlePacket(pk, src)
+		if err != nil {
 			errCh <- fmt.Errorf("%s: write %T: %w", name, pk, err)
 			return
 		}
 	}
-}
-
-func writePacket(dst *minecraft.Conn, converter *translator.MinecraftConverter, pk packet.Packet) error {
-	dstPacket, err := converter.ConvertPacket(pk)
-	if err != nil {
-		return err
-	}
-	return dst.WritePacket(dstPacket)
 }

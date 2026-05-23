@@ -61,6 +61,10 @@ func (c *EchoConn) ReadPacket() (packet.Packet, error) {
 	return pk, nil
 }
 
+func (c *EchoConn) Packets() chan packet.Packet {
+	return c.packets
+}
+
 func NewEchoConn(conn *minecraft.Conn) Conn {
-	return &EchoConn{Conn: conn, packets: make(chan packet.Packet, 10)}
+	return &EchoConn{Conn: conn, packets: make(chan packet.Packet, 32767)}
 }

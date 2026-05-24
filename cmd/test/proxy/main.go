@@ -64,6 +64,7 @@ func handleClient(clientConn *minecraft.Conn) {
 
 	log.Printf("client %s joined from %s, version: %s", clientConn.IdentityData().DisplayName, clientConn.RemoteAddr(), clientConn.Proto().Ver())
 	dialer := minecraft.Dialer{
+		EnableLegacyAuth: true,
 		ErrorLog:                   slog.Default(),
 		IdentityData:               clientConn.IdentityData(),
 		ClientData:                 clientConn.ClientData(),

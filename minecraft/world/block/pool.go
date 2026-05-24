@@ -27,7 +27,8 @@ import (
 	"github.com/Yeah114/gopherconvert/minecraft/world/block/v1v20v80"
 	"github.com/Yeah114/gopherconvert/minecraft/world/block/v1v21v0"
 	"github.com/Yeah114/gopherconvert/minecraft/world/block/v1v21v100"
-	"github.com/Yeah114/gopherconvert/minecraft/world/block/v1v21v110"
+//	"github.com/Yeah114/gopherconvert/minecraft/world/block/v1v21v110"
+	"github.com/Yeah114/gopherconvert/minecraft/world/block/v1v21v120"
 	"github.com/Yeah114/gopherconvert/minecraft/world/block/v1v21v124"
 	"github.com/Yeah114/gopherconvert/minecraft/world/block/v1v21v130"
 	"github.com/Yeah114/gopherconvert/minecraft/world/block/v1v21v20"
@@ -79,7 +80,9 @@ var Pool = map[int32]func(bool) *block.BlockRuntimeIDTable{
 	protocol.Protocol1v21v80:   v1v21v80.NewBlockRuntimeIDTable,
 	protocol.Protocol1v21v90:   v1v21v90.NewBlockRuntimeIDTable,
 	protocol.Protocol1v21v100:  v1v21v100.NewBlockRuntimeIDTable,
-	protocol.Protocol1v21v110:  v1v21v110.NewBlockRuntimeIDTable,
+//	protocol.Protocol1v21v110:  v1v21v110.NewBlockRuntimeIDTable,
+	protocol.Protocol1v21v110:  v1v21v130.NewBlockRuntimeIDTable, // From PowerNukkitX
+	protocol.Protocol1v21v120:  v1v21v120.NewBlockRuntimeIDTable,
 	protocol.Protocol1v21v124:  v1v21v124.NewBlockRuntimeIDTable,
 	protocol.Protocol1v21v130:  v1v21v130.NewBlockRuntimeIDTable,
 	protocol.Protocol1v26v0:    v1v26v0.NewBlockRuntimeIDTable,

@@ -2,6 +2,7 @@ package version
 
 import (
 	"sort"
+	"reflect"
 
 	"github.com/Yeah114/gopherconvert/minecraft/define"
 	"github.com/Yeah114/gopherconvert/minecraft/version/v1v16v100"
@@ -103,8 +104,25 @@ func GetVersionConverters(sourceProto, targetProto int32) []func(define.Minecraf
 		return list[i].proto > list[j].proto
 	})
 
-	var res []func(define.MinecraftConverter) define.VersionConverter
+	uniqueMap := make(map[uintptr]pair)
 	for _, item := range list {
+		ptr := reflect.ValueOf(item.ctor).Pointer()
+		old, exists := uniqueMap[ptr]
+		if !exists || item.proto < old.proto {
+			uniqueMap[ptr] = item
+		}
+	}
+
+	var uniqueList []pair
+	for _, v := range uniqueMap {
+		uniqueList = append(uniqueList, v)
+	}
+	sort.Slice(uniqueList, func(i, j int) bool {
+		return uniqueList[i].proto > uniqueList[j].proto
+	})
+
+	var res []func(define.MinecraftConverter) define.VersionConverter
+	for _, item := range uniqueList {
 		res = append(res, item.ctor)
 	}
 	return res

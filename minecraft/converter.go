@@ -1,8 +1,8 @@
 package minecraft
 
 import (
-	"context"
 	"fmt"
+	"context"
 
 	bwo_block "github.com/Yeah114/bedrock-world-operator/block"
 	"github.com/Yeah114/gopherconvert/minecraft/define"
@@ -103,6 +103,8 @@ func (c *MinecraftConverter) StartGameContext(ctx context.Context, data *minecra
 		}
 		c.vcs[i] = v
 	}
+	clientTable.FinaliseRegister()
+	serverTable.FinaliseRegister()
 
 	err = c.clientConn.StartGameContext(ctx, *data)
 	if err != nil {

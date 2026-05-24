@@ -2,6 +2,7 @@ package v1v21v130
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/Yeah114/gopherconvert/minecraft/define"
 	"github.com/Yeah114/gopherconvert/minecraft/utils"
@@ -32,7 +33,6 @@ func (c *VersionConverter) StartGame(data *minecraft.GameData) (err error) {
 				return fmt.Errorf("v1v21v130.VersionConverter.StartGame: failed to register custom block: %w", err)
 			}
 		}
-		table.FinaliseRegister()
 	}
 	return nil
 }
@@ -41,10 +41,27 @@ func (c *VersionConverter) StartGame(data *minecraft.GameData) (err error) {
 // transformations where needed.
 func (c *VersionConverter) HandlePacket(pk packet.Packet, sender define.Conn) (err error) {
 	if sender == c.c.ServerConn() {
-		return c.c.ClientConnEcho().WritePacket(pk)
+		switch pkt := pk.(type) {
+		case *packet.Text:
+			return c.HandleText(pkt)
+		default:
+			return c.c.ClientConnEcho().WritePacket(pk)
+		}
 	}
 	if sender == c.c.ClientConn() {
 		return c.c.ServerConnEcho().WritePacket(pk)
 	}
 	return fmt.Errorf("v1v21v130.VersionConverter.HandlePacket: unknown sender")
+}
+
+func (c *VersionConverter) HandleText(pk *packet.Text) error {
+	if c.c.ClientConnEcho().Proto().ID() <= c.c.ServerConnEcho().Proto().ID() {
+		return c.c.ClientConnEcho().WritePacket(pk)
+	}
+
+	if pk.SourceName == "" && pk.TextType == packet.TextTypeTranslation && len(pk.Parameters) != 0 && !strings.Contains(pk.Message, "%") {
+		pk.TextType = packet.TextTypeSystem
+	}
+
+	return c.c.ClientConnEcho().WritePacket(pk)
 }

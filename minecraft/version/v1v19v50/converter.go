@@ -32,7 +32,6 @@ func (c *VersionConverter) StartGame(data *minecraft.GameData) (err error) {
 				return fmt.Errorf("v1v19v50.VersionConverter.StartGame: failed to register custom block: %w", err)
 			}
 		}
-		table.FinaliseRegister()
 	}
 	return nil
 }

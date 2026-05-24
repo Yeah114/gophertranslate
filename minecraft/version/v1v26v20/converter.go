@@ -31,10 +31,9 @@ func (c *VersionConverter) StartGame(data *minecraft.GameData) (err error) {
 		for _, state := range BlockStates {
 			err := table.RegisterCustomBlock(state)
 			if err != nil {
-				return fmt.Errorf("v1.26v20.VersionConverter.StartGame: failed to register custom block: %w", err)
+				return fmt.Errorf("v1v26v20.VersionConverter.StartGame: failed to register custom block: %w", err)
 			}
 		}
-		table.FinaliseRegister()
 	}
 
 	return nil

@@ -20,7 +20,15 @@ func BlockRuntimeIDTableFromGameDataAndVersion(data minecraft.GameData, version 
 	}
 
 	table := tableFunc(data.UseBlockNetworkIDHashes)
+	existHashSet := make(map[uint32]struct{})
+
 	for _, blockEntry := range data.CustomBlocks {
+		blockHash := bwo_block.ComputeBlockHash(blockEntry.Name, blockEntry.Properties)
+		if _, exists := existHashSet[blockHash]; exists {
+			continue
+		}
+		existHashSet[blockHash] = struct{}{}
+
 		err := table.RegisterCustomBlock(bwo_define.BlockState{
 			Name:       blockEntry.Name,
 			Properties: blockEntry.Properties,
@@ -30,7 +38,6 @@ func BlockRuntimeIDTableFromGameDataAndVersion(data minecraft.GameData, version 
 			return nil, fmt.Errorf("BlockRuntimeIDTableFromGameDataAndVersion: failed to register custom block %s: %w", blockEntry.Name, err)
 		}
 	}
-	table.FinaliseRegister()
 
 	return table, nil
 }

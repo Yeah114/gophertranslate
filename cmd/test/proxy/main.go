@@ -23,10 +23,20 @@ const (
 )
 
 func main() {
+	pool := minecraft.NewBedrockProtocolPool()
+	acceptedProtocols := make([]minecraft.Protocol, len(pool))
+	index := 0
+	for _, protocol := range pool {
+		acceptedProtocols[index] = protocol
+		index++
+	}
+	log.Printf("loaded %d protocols", len(pool))
+
 	cfg := minecraft.ListenConfig{
 		ErrorLog:               slog.Default(),
 		AuthenticationDisabled: true,
 		AllowUnknownPackets:    true,
+		AcceptedProtocols:      acceptedProtocols,
 		StatusProvider:         minecraft.NewStatusProvider("GopherConvert Proxy", "GopherConvert"),
 	}
 	listener, err := cfg.Listen("raknet", listenAddress)
@@ -71,6 +81,10 @@ func handleClient(clientConn *minecraft.Conn) {
 	serverConn, err := dialer.DialContext(ctx, "raknet", serverAddress)
 	if err != nil {
 		log.Printf("dial server failed: %v", err)
+		_ = clientConn.WritePacket(&packet.Disconnect{
+			Reason:  packet.DisconnectReasonThirdPartyNoInternet,
+			Message: err.Error(),
+		})
 		return
 	}
 	defer serverConn.Close()
@@ -85,13 +99,10 @@ func handleClient(clientConn *minecraft.Conn) {
 	gameData := serverConn.GameData()
 	if err := converter.StartGameContext(ctx, &gameData); err != nil {
 		log.Printf("start client game failed: %v", err)
-		err = clientConn.WritePacket(&packet.Disconnect{
+		_ = clientConn.WritePacket(&packet.Disconnect{
 			Reason:  packet.DisconnectReasonThirdPartyNoInternet,
 			Message: err.Error(),
 		})
-		if err != nil {
-			log.Printf("disconnect client failed: %v", err)
-		}
 	}
 	if err != nil {
 		log.Printf("create converter failed: %v", err)

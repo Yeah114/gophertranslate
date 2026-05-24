@@ -25,6 +25,9 @@ func (c *BlockConverter) BlockConverter() *world_block.BlockConverter {
 
 // ConvertClientBlockRuntimeID converts a block runtime ID from the source protocol to the destination protocol.
 func (c *BlockConverter) ConvertClientBlockRuntimeID(clientBlockRuntimeID uint32) (uint32, error) {
+	if clientBlockRuntimeID == 0 {
+		return 0, nil
+	}
 	serverBlockRuntimeID, ok := c.bc.ConvertClientBlockRuntimeID(clientBlockRuntimeID)
 	if !ok {
 		return 0, fmt.Errorf("ConvertClientBlockRuntimeID: unknown source block runtime ID %d", clientBlockRuntimeID)
@@ -352,6 +355,9 @@ func (c *BlockConverter) ConvertClientBiomeCappedSurface(clientCappedSurface pro
 
 // ConvertServerBlockRuntimeID converts a block runtime ID from the server protocol to the client protocol.
 func (c *BlockConverter) ConvertServerBlockRuntimeID(serverBlockRuntimeID uint32) (uint32, error) {
+	if serverBlockRuntimeID == 0 {
+		return 0, nil
+	}
 	clientBlockRuntimeID, ok := c.bc.ConvertServerBlockRuntimeID(serverBlockRuntimeID)
 	if !ok {
 		return 0, fmt.Errorf("ConvertServerBlockRuntimeID: unknown server block runtime ID %d", serverBlockRuntimeID)

@@ -2,6 +2,7 @@ package block
 
 import (
 	"github.com/Yeah114/bedrock-world-operator/block"
+	"github.com/Yeah114/gophertunnel/minecraft/protocol"
 	"github.com/Yeah114/gopherconvert/minecraft/world/block/v1v16v100"
 	"github.com/Yeah114/gopherconvert/minecraft/world/block/v1v16v210"
 	"github.com/Yeah114/gopherconvert/minecraft/world/block/v1v17v0"
@@ -27,6 +28,7 @@ import (
 	"github.com/Yeah114/gopherconvert/minecraft/world/block/v1v21v0"
 	"github.com/Yeah114/gopherconvert/minecraft/world/block/v1v21v100"
 	"github.com/Yeah114/gopherconvert/minecraft/world/block/v1v21v110"
+	"github.com/Yeah114/gopherconvert/minecraft/world/block/v1v21v124"
 	"github.com/Yeah114/gopherconvert/minecraft/world/block/v1v21v130"
 	"github.com/Yeah114/gopherconvert/minecraft/world/block/v1v21v20"
 	"github.com/Yeah114/gopherconvert/minecraft/world/block/v1v21v30"
@@ -38,9 +40,8 @@ import (
 	"github.com/Yeah114/gopherconvert/minecraft/world/block/v1v21v90"
 	"github.com/Yeah114/gopherconvert/minecraft/world/block/v1v26v0"
 	"github.com/Yeah114/gopherconvert/minecraft/world/block/v1v26v10"
-	"github.com/Yeah114/gopherconvert/minecraft/world/block/v1v26v20"
 	"github.com/Yeah114/gopherconvert/minecraft/world/block/v1v26v20v26"
-	"github.com/Yeah114/gophertunnel/minecraft/protocol"
+	"github.com/Yeah114/gopherconvert/minecraft/world/block/v1v26v20"
 )
 
 // Pool holds functions that create BlockRuntimeIDTables for different Minecraft versions.
@@ -79,6 +80,7 @@ var Pool = map[int32]func(bool) *block.BlockRuntimeIDTable{
 	protocol.Protocol1v21v90:   v1v21v90.NewBlockRuntimeIDTable,
 	protocol.Protocol1v21v100:  v1v21v100.NewBlockRuntimeIDTable,
 	protocol.Protocol1v21v110:  v1v21v110.NewBlockRuntimeIDTable,
+	protocol.Protocol1v21v124:  v1v21v124.NewBlockRuntimeIDTable,
 	protocol.Protocol1v21v130:  v1v21v130.NewBlockRuntimeIDTable,
 	protocol.Protocol1v26v0:    v1v26v0.NewBlockRuntimeIDTable,
 	protocol.Protocol1v26v10:   v1v26v10.NewBlockRuntimeIDTable,

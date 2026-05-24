@@ -2,6 +2,7 @@ package v1v20v40
 
 import (
 	_ "embed"
+	"sync"
 
 	"github.com/Yeah114/bedrock-world-operator/block"
 	"github.com/Yeah114/bedrock-world-operator/define"
@@ -12,12 +13,16 @@ var (
 	//go:embed block_states.nbt
 	blockStatesBytes []byte
 	blockStates      []define.BlockState
+	initOnce         sync.Once
 )
 
-func init() {
-	blockStates = utils.DecodeBlockStates(blockStatesBytes)
+func Init() {
+	initOnce.Do(func() {
+		blockStates = utils.DecodeBlockStates(blockStatesBytes)
+	})
 }
 
 func NewBlockRuntimeIDTable(useNetworkIDHashes bool) *block.BlockRuntimeIDTable {
+	Init()
 	return block.NewBlockRuntimeIDTableFromStates(blockStates, useNetworkIDHashes)
 }

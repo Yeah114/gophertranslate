@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	bwo_block "github.com/Yeah114/bedrock-world-operator/block"
+	world_block "github.com/Yeah114/gopherconvert/minecraft/world/block"
 	"github.com/Yeah114/gopherconvert/minecraft/world/block/v1v26v10"
 	"github.com/Yeah114/gopherconvert/minecraft/world/block/v1v26v20"
 	"github.com/Yeah114/gophertunnel/minecraft/protocol"
@@ -22,6 +23,8 @@ type blockState struct {
 }
 
 func main() {
+	world_block.Init(nil)
+
 	v10 := v1v26v10.NewBlockRuntimeIDTable(false)
 	v20 := v1v26v20.NewBlockRuntimeIDTable(false)
 	version := protocol.NewInfoByVersion(leftVersion).Version()

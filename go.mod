@@ -27,3 +27,5 @@ require (
 )
 
 replace github.com/Yeah114/gophertunnel => ../Yeah114/gophertunnel
+
+replace github.com/Yeah114/worlddowngrader => ../Yeah114/worlddowngrader

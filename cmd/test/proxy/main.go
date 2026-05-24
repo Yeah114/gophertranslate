@@ -12,6 +12,7 @@ import (
 	"time"
 
 	convert "github.com/Yeah114/gopherconvert/minecraft"
+	world_block "github.com/Yeah114/gopherconvert/minecraft/world/block"
 	"github.com/Yeah114/gophertunnel/minecraft"
 	"github.com/Yeah114/gophertunnel/minecraft/protocol/packet"
 	"github.com/google/uuid"
@@ -23,6 +24,11 @@ const (
 )
 
 func main() {
+	world_block.Init(func(version string) {
+		log.Printf("initialising block table: %s", version)
+	})
+	log.Print("Initialized all block tables")
+
 	pool := minecraft.NewBedrockProtocolPool()
 	acceptedProtocols := make([]minecraft.Protocol, len(pool))
 	index := 0
@@ -64,7 +70,7 @@ func handleClient(clientConn *minecraft.Conn) {
 
 	log.Printf("client %s joined from %s, version: %s", clientConn.IdentityData().DisplayName, clientConn.RemoteAddr(), clientConn.Proto().Ver())
 	dialer := minecraft.Dialer{
-		EnableLegacyAuth: true,
+		EnableLegacyAuth:           true,
 		ErrorLog:                   slog.Default(),
 		IdentityData:               clientConn.IdentityData(),
 		ClientData:                 clientConn.ClientData(),

@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"sort"
 
+	world_block "github.com/Yeah114/gopherconvert/minecraft/world/block"
 	"github.com/Yeah114/gophertunnel/minecraft/nbt"
 )
 
@@ -59,6 +60,8 @@ var alreadyExisting = map[int32]bool{
 }
 
 func main() {
+	world_block.Init(nil)
+
 	datDir := `D:\Nukkit-MOT\src\main\resources`
 	blockDir := `D:\gopherconvert\minecraft\world\block`
 
@@ -157,7 +160,12 @@ func main() {
 		os.MkdirAll(verDir, 0755)
 
 		nbtPath := filepath.Join(verDir, "block_states.nbt")
-		if err := os.WriteFile(nbtPath, outBuf.Bytes(), 0644); err != nil {
+		compressed, gzipErr := gzipBytes(outBuf.Bytes())
+		if gzipErr != nil {
+			fmt.Printf("ERROR gzip: %v\n", gzipErr)
+			continue
+		}
+		if err := os.WriteFile(nbtPath, compressed, 0644); err != nil {
 			fmt.Printf("ERROR write: %v\n", err)
 			continue
 		}
@@ -166,6 +174,7 @@ func main() {
 
 import (
 	_ "embed"
+	"sync"
 
 	"github.com/Yeah114/bedrock-world-operator/block"
 	"github.com/Yeah114/bedrock-world-operator/define"
@@ -175,14 +184,18 @@ import (
 var (
 	//go:embed block_states.nbt
 	blockStatesBytes []byte
-	blockStates      []define.BlockState
+	blockStates []define.BlockState
+	initOnce    sync.Once
 )
 
-func init() {
-	blockStates = utils.DecodeBlockStates(blockStatesBytes)
+func Init() {
+	initOnce.Do(func() {
+		blockStates = utils.DecodeBlockStates(blockStatesBytes)
+	})
 }
 
 func NewBlockRuntimeIDTable(useNetworkIDHashes bool) *block.BlockRuntimeIDTable {
+	Init()
 	return block.NewBlockRuntimeIDTableFromStates(blockStates, useNetworkIDHashes)
 }
 `, info.DirName)
@@ -203,4 +216,20 @@ func NewBlockRuntimeIDTable(useNetworkIDHashes bool) *block.BlockRuntimeIDTable 
 			fmt.Println(e)
 		}
 	}
+}
+
+func gzipBytes(data []byte) ([]byte, error) {
+	var compressed bytes.Buffer
+	writer, err := gzip.NewWriterLevel(&compressed, gzip.BestCompression)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := writer.Write(data); err != nil {
+		_ = writer.Close()
+		return nil, err
+	}
+	if err := writer.Close(); err != nil {
+		return nil, err
+	}
+	return compressed.Bytes(), nil
 }

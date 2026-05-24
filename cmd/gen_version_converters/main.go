@@ -25,6 +25,8 @@ type blockStateRecord struct {
 }
 
 func main() {
+	block.Init(nil)
+
 	var versions []versionEntry
 	for proto := range block.Pool {
 		info := protocol.Info(proto)

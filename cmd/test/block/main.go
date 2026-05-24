@@ -13,6 +13,8 @@ import (
 )
 
 func main() {
+	block.Init(nil)
+
 	srcTable := v1v26v20.NewBlockRuntimeIDTable(false)
 	dstTable := v1v26v10.NewBlockRuntimeIDTable(false)
 	err := dstTable.RegisterCustomBlock(define.BlockState{

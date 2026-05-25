@@ -27,7 +27,7 @@ func main() {
 	world_block.Init(func(version string) {
 		log.Printf("initialising block table: %s", version)
 	})
-	log.Print("Initialized all block tables")
+	log.Print("initialized all block tables")
 
 	pool := minecraft.NewBedrockProtocolPool()
 	acceptedProtocols := make([]minecraft.Protocol, len(pool))

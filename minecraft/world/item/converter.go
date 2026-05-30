@@ -4,29 +4,31 @@ import "github.com/Yeah114/gophertunnel/minecraft/protocol"
 
 // ItemConverter converts item runtime IDs between two protocol versions.
 type ItemConverter struct {
-	clientInfo  protocol.Info
-	serverInfo  protocol.Info
+	clientInfo  protocol.Profile
+	serverInfo  protocol.Profile
 	clientTable *ItemRuntimeIDTable
 	serverTable *ItemRuntimeIDTable
 }
 
 // NewItemConverter creates a new ItemConverter.
 func NewItemConverter(clientProtocol int32, clientTable *ItemRuntimeIDTable, serverProtocol int32, serverTable *ItemRuntimeIDTable) *ItemConverter {
+	clientInfo, _ := protocol.GetProfile(clientProtocol)
+	serverInfo, _ := protocol.GetProfile(serverProtocol)
 	return &ItemConverter{
-		clientInfo:  protocol.NewInfoByProtocol(clientProtocol),
-		serverInfo:  protocol.NewInfoByProtocol(serverProtocol),
+		clientInfo:  clientInfo,
+		serverInfo:  serverInfo,
 		clientTable: clientTable,
 		serverTable: serverTable,
 	}
 }
 
 // ClientInfo returns the protocol info of the source protocol version.
-func (c *ItemConverter) ClientInfo() protocol.Info {
+func (c *ItemConverter) ClientInfo() protocol.Profile {
 	return c.clientInfo
 }
 
 // ServerInfo returns the protocol info of the destination protocol version.
-func (c *ItemConverter) ServerInfo() protocol.Info {
+func (c *ItemConverter) ServerInfo() protocol.Profile {
 	return c.serverInfo
 }
 

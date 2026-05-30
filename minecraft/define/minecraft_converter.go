@@ -148,7 +148,7 @@ type VersionConverter interface {
 
 type DaemonConverter interface {
 	Name() string
-	ProtocolInfo() protocol.Info
+	ProtocolInfo() protocol.Profile
 	Start()
 	Stop()
 }

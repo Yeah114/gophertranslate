@@ -79,12 +79,16 @@ func buildFullBlockStates() ([]bwo_define.BlockState, error) {
 	table := tableFunc(false)
 	table.FinaliseRegister()
 
-	versions := make([]string, 0, len(protocol.VersionToProtocol))
-	for version := range protocol.VersionToProtocol {
-		versions = append(versions, version)
+	profiles := protocol.Profiles()
+	versions := make([]protocol.Profile, 0, len(profiles))
+	for _, profile := range profiles {
+		if profile.NetEase {
+			continue
+		}
+		versions = append(versions, profile)
 	}
 	sort.Slice(versions, func(i, j int) bool {
-		return protocol.VersionToProtocol[versions[i]] > protocol.VersionToProtocol[versions[j]]
+		return versions[i].Protocol > versions[j].Protocol
 	})
 
 	latestStates := make([]bwo_define.BlockState, 0)
@@ -96,14 +100,14 @@ func buildFullBlockStates() ([]bwo_define.BlockState, error) {
 		latestStates = append(latestStates, bwo_define.BlockState{
 			Name:       name,
 			Properties: properties,
-			Version:    protocol.CurrentInfo.Version(),
+			Version:    protocol.CurrentProfile.BlockStateVersion(),
 		})
 	}
 
 	versionStates := make([][]bwo_define.BlockState, len(versions))
 	var wg sync.WaitGroup
-	for versionIndex, version := range versions {
-		versionIndex, version := versionIndex, version
+	for versionIndex, profile := range versions {
+		versionIndex, profile := versionIndex, profile
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -114,7 +118,7 @@ func buildFullBlockStates() ([]bwo_define.BlockState, error) {
 					Name:       state.Name,
 					Properties: state.Properties,
 					Version:    state.Version,
-				}, version)
+				}, profile.Version)
 				states = append(states, bwo_define.BlockState{
 					Name:       downgraded.Name,
 					Properties: downgraded.Properties,

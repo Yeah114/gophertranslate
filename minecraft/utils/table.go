@@ -17,7 +17,11 @@ func BlockRuntimeIDTableFromGameDataAndVersion(data minecraft.GameData, version 
 	if data.UseBlockNetworkIDHashes {
 		return FullBlockRuntimeIDTableFromGameData(data)
 	}
-	info := protocol.NewInfoByVersion(version)
+	protocolID, ok := protocol.GetProtocol(version)
+	if !ok {
+		return nil, fmt.Errorf("BlockRuntimeIDTableFromGameDataAndVersion: no protocol found for version %v", version)
+	}
+	info, _ := protocol.GetProfile(protocolID)
 	customBlocks := append([]protocol.BlockEntry{}, data.CustomBlocks...)
 	tableFunc, found := block.Pool[info.ID()]
 	if !found {
@@ -37,7 +41,7 @@ func BlockRuntimeIDTableFromGameDataAndVersion(data minecraft.GameData, version 
 		err := table.RegisterCustomBlock(bwo_define.BlockState{
 			Name:       blockEntry.Name,
 			Properties: blockEntry.Properties,
-			Version:    info.Version(),
+			Version:    info.BlockStateVersion(),
 		})
 		if err != nil {
 			return nil, fmt.Errorf("BlockRuntimeIDTableFromGameDataAndVersion: failed to register custom block %s: %w", blockEntry.Name, err)
@@ -68,7 +72,7 @@ func FullBlockRuntimeIDTableFromGameData(data minecraft.GameData) (*bwo_block.Bl
 		err := table.RegisterCustomBlock(bwo_define.BlockState{
 			Name:       blockEntry.Name,
 			Properties: blockEntry.Properties,
-			Version:    protocol.CurrentInfo.Version(),
+			Version:    protocol.CurrentProfile.BlockStateVersion(),
 		})
 		if err != nil {
 			return nil, fmt.Errorf("FullBlockRuntimeIDTableFromGameData: failed to register custom block %s: %w", blockEntry.Name, err)

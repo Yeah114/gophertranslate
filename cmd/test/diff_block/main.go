@@ -27,8 +27,11 @@ func main() {
 
 	v10 := v1v26v10.NewBlockRuntimeIDTable(false)
 	v20 := v1v26v20.NewBlockRuntimeIDTable(false)
-	version := protocol.NewInfoByVersion(leftVersion).Version()
-	_ = protocol.NewInfoByVersion(rightVersion).Version()
+	leftProtocol, _ := protocol.GetProtocol(leftVersion)
+	rightProtocol, _ := protocol.GetProtocol(rightVersion)
+	leftProfile, _ := protocol.GetProfile(leftProtocol)
+	_, _ = protocol.GetProfile(rightProtocol)
+	version := leftProfile.BlockStateVersion()
 
 	onlyIn20 := diffStates(scanStates(v20), scanStates(v10))
 

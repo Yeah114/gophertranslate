@@ -9,16 +9,16 @@ import (
 
 // BlockConverter is a struct that can convert block states and runtime IDs between two protocol versions.
 type BlockConverter struct {
-	clientInfo  protocol.Info
-	serverInfo  protocol.Info
+	clientInfo  protocol.Profile
+	serverInfo  protocol.Profile
 	clientTable *block.BlockRuntimeIDTable
 	serverTable *block.BlockRuntimeIDTable
 }
 
 // NewBlockConverter creates a new BlockConverter that can convert block states and runtime IDs between two protocol versions.
 func NewBlockConverter(clientProtocol int32, clientTable *block.BlockRuntimeIDTable, serverProtocol int32, serverTable *block.BlockRuntimeIDTable) *BlockConverter {
-	clientInfo := protocol.NewInfoByProtocol(clientProtocol)
-	serverInfo := protocol.NewInfoByProtocol(serverProtocol)
+	clientInfo, _ := protocol.GetProfile(clientProtocol)
+	serverInfo, _ := protocol.GetProfile(serverProtocol)
 
 	return &BlockConverter{
 		clientInfo:  clientInfo,
@@ -29,12 +29,12 @@ func NewBlockConverter(clientProtocol int32, clientTable *block.BlockRuntimeIDTa
 }
 
 // ServerInfo returns the protocol info of the destination protocol version.
-func (c *BlockConverter) ClientInfo() protocol.Info {
+func (c *BlockConverter) ClientInfo() protocol.Profile {
 	return c.clientInfo
 }
 
 // ServerInfo returns the protocol info of the destination protocol version.
-func (c *BlockConverter) ServerInfo() protocol.Info {
+func (c *BlockConverter) ServerInfo() protocol.Profile {
 	return c.serverInfo
 }
 
@@ -51,19 +51,19 @@ func (c *BlockConverter) ServerTable() *block.BlockRuntimeIDTable {
 // ConvertClientBlockState converts a client block state to the server protocol version.
 // It returns the converted block state and a boolean indicating whether the conversion was successful.
 func (c *BlockConverter) ConvertClientBlockState(name string, properties map[string]interface{}) (string, map[string]interface{}, bool) {
-	if c.clientInfo.Version() < c.serverInfo.Version() {
+	if c.clientInfo.BlockStateVersion() < c.serverInfo.BlockStateVersion() {
 		blockState := blockupgrader.BlockState{
 			Name:       name,
 			Properties: properties,
-			Version:    c.clientInfo.Version(),
+			Version:    c.clientInfo.BlockStateVersion(),
 		}
 		serverBlockState := blockupgrader.UpgradeToVersion(blockState, c.serverInfo.Ver())
 		return serverBlockState.Name, serverBlockState.Properties, true
-	} else if c.clientInfo.Version() > c.serverInfo.Version() {
+	} else if c.clientInfo.BlockStateVersion() > c.serverInfo.BlockStateVersion() {
 		blockState := blockdowngrader.BlockState{
 			Name:       name,
 			Properties: properties,
-			Version:    c.clientInfo.Version(),
+			Version:    c.clientInfo.BlockStateVersion(),
 		}
 		serverBlockState := blockdowngrader.DowngradeToVersion(blockState, c.serverInfo.Ver())
 		return serverBlockState.Name, serverBlockState.Properties, true
@@ -74,19 +74,19 @@ func (c *BlockConverter) ConvertClientBlockState(name string, properties map[str
 // ConvertServerBlockState converts a server block state to the client protocol version.
 // It returns the converted block state and a boolean indicating whether the conversion was successful.
 func (c *BlockConverter) ConvertServerBlockState(name string, properties map[string]interface{}) (string, map[string]interface{}, bool) {
-	if c.clientInfo.Version() < c.serverInfo.Version() {
+	if c.clientInfo.BlockStateVersion() < c.serverInfo.BlockStateVersion() {
 		blockState := blockdowngrader.BlockState{
 			Name:       name,
 			Properties: properties,
-			Version:    c.serverInfo.Version(),
+			Version:    c.serverInfo.BlockStateVersion(),
 		}
 		clientBlockState := blockdowngrader.DowngradeToVersion(blockState, c.clientInfo.Ver())
 		return clientBlockState.Name, clientBlockState.Properties, true
-	} else if c.clientInfo.Version() > c.serverInfo.Version() {
+	} else if c.clientInfo.BlockStateVersion() > c.serverInfo.BlockStateVersion() {
 		blockState := blockupgrader.BlockState{
 			Name:       name,
 			Properties: properties,
-			Version:    c.serverInfo.Version(),
+			Version:    c.serverInfo.BlockStateVersion(),
 		}
 		clientBlockState := blockupgrader.UpgradeToVersion(blockState, c.clientInfo.Ver())
 		return clientBlockState.Name, clientBlockState.Properties, true

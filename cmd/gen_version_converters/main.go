@@ -29,10 +29,13 @@ func main() {
 
 	var versions []versionEntry
 	for proto := range block.Pool {
-		info := protocol.Info(proto)
+		info, ok := protocol.GetProfile(proto)
+		if !ok {
+			continue
+		}
 		verStr := info.Ver()
 		verName := versionStrToDirName(verStr)
-		verInt := info.Version()
+		verInt := info.BlockStateVersion()
 		versions = append(versions, versionEntry{
 			proto:       proto,
 			versionName: verName,

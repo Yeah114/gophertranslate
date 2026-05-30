@@ -1,7 +1,5 @@
 github.com/Yeah114/bedrock-world-operator v1.5.1 h1:kxrdL/I+h4diwhpehSVbY1kCcpH2liE+LuPaKv5/YRM=
 github.com/Yeah114/bedrock-world-operator v1.5.1/go.mod h1:zeXZE+pmqUEw6T9AwZUqY5OhcbpL/UT89qYlkigRM5g=
-github.com/Yeah114/worlddowngrader v1.0.0 h1:FyFrgh60LXVt8Gm8sDOK+2Fbk2XB3+X8Q+A8iut7fjs=
-github.com/Yeah114/worlddowngrader v1.0.0/go.mod h1:DBWUWcgo9nYEoQFOU2Z19aWWRKvGpy/mPZpWf9JmawI=
 github.com/Yeah114/worldupgrader v1.99.0 h1:HR95kGXpFtPUHDnJBhq+JMooCLlgXo6OgQwxRuYhOAw=
 github.com/Yeah114/worldupgrader v1.99.0/go.mod h1:rRyI8ql5NqcI9Ft49k6sx9bnpSFKPne9y7ZXyZuOxRU=
 github.com/coreos/go-oidc/v3 v3.17.0 h1:hWBGaQfbi0iVviX4ibC7bk8OKT5qNr4klBaCHVNvehc=

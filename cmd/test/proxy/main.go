@@ -19,8 +19,8 @@ import (
 )
 
 const (
-	listenAddress = ":19133"
-	serverAddress = "127.0.0.1:19132"
+	listenAddress = ":19134"
+	serverAddress = "127.0.0.1:19133"
 )
 
 func main() {

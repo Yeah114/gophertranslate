@@ -24,5 +24,5 @@ func Init() {
 
 func NewBlockRuntimeIDTable(useNetworkIDHashes bool) *block.BlockRuntimeIDTable {
 	Init()
-	return block.NewBlockRuntimeIDTableFromStates(blockStates, useNetworkIDHashes)
+	return block.NewBlockRuntimeIDTableFromStates(utils.CloneBlockStates(blockStates), useNetworkIDHashes)
 }

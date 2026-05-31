@@ -2,6 +2,7 @@ package block
 
 import (
 	"github.com/Yeah114/bedrock-world-operator/block"
+	block_utils "github.com/Yeah114/gopherconvert/minecraft/world/block/utils"
 	"github.com/Yeah114/gophertunnel/minecraft/protocol"
 	"github.com/Yeah114/worlddowngrader/blockdowngrader"
 	"github.com/Yeah114/worldupgrader/blockupgrader"
@@ -54,7 +55,7 @@ func (c *BlockConverter) ConvertClientBlockState(name string, properties map[str
 	if c.clientInfo.BlockStateVersion() < c.serverInfo.BlockStateVersion() {
 		blockState := blockupgrader.BlockState{
 			Name:       name,
-			Properties: properties,
+			Properties: block_utils.CloneProperties(properties),
 			Version:    c.clientInfo.BlockStateVersion(),
 		}
 		serverBlockState := blockupgrader.UpgradeToVersion(blockState, c.serverInfo.Ver())
@@ -62,7 +63,7 @@ func (c *BlockConverter) ConvertClientBlockState(name string, properties map[str
 	} else if c.clientInfo.BlockStateVersion() > c.serverInfo.BlockStateVersion() {
 		blockState := blockdowngrader.BlockState{
 			Name:       name,
-			Properties: properties,
+			Properties: block_utils.CloneProperties(properties),
 			Version:    c.clientInfo.BlockStateVersion(),
 		}
 		serverBlockState := blockdowngrader.DowngradeToVersion(blockState, c.serverInfo.Ver())
@@ -77,7 +78,7 @@ func (c *BlockConverter) ConvertServerBlockState(name string, properties map[str
 	if c.clientInfo.BlockStateVersion() < c.serverInfo.BlockStateVersion() {
 		blockState := blockdowngrader.BlockState{
 			Name:       name,
-			Properties: properties,
+			Properties: block_utils.CloneProperties(properties),
 			Version:    c.serverInfo.BlockStateVersion(),
 		}
 		clientBlockState := blockdowngrader.DowngradeToVersion(blockState, c.clientInfo.Ver())
@@ -85,7 +86,7 @@ func (c *BlockConverter) ConvertServerBlockState(name string, properties map[str
 	} else if c.clientInfo.BlockStateVersion() > c.serverInfo.BlockStateVersion() {
 		blockState := blockupgrader.BlockState{
 			Name:       name,
-			Properties: properties,
+			Properties: block_utils.CloneProperties(properties),
 			Version:    c.serverInfo.BlockStateVersion(),
 		}
 		clientBlockState := blockupgrader.UpgradeToVersion(blockState, c.clientInfo.Ver())

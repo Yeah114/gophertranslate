@@ -7,6 +7,7 @@ import (
 	bwo_define "github.com/Yeah114/bedrock-world-operator/define"
 	"github.com/Yeah114/gopherconvert/minecraft/world/block"
 	"github.com/Yeah114/gopherconvert/minecraft/world/block/full"
+	block_utils "github.com/Yeah114/gopherconvert/minecraft/world/block/utils"
 	"github.com/Yeah114/gopherconvert/minecraft/world/item"
 	"github.com/Yeah114/gophertunnel/minecraft"
 	"github.com/Yeah114/gophertunnel/minecraft/protocol"
@@ -40,7 +41,7 @@ func BlockRuntimeIDTableFromGameDataAndVersion(data minecraft.GameData, version 
 
 		err := table.RegisterCustomBlock(bwo_define.BlockState{
 			Name:       blockEntry.Name,
-			Properties: blockEntry.Properties,
+			Properties: block_utils.CloneProperties(blockEntry.Properties),
 			Version:    info.BlockStateVersion(),
 		})
 		if err != nil {
@@ -53,8 +54,9 @@ func BlockRuntimeIDTableFromGameDataAndVersion(data minecraft.GameData, version 
 
 // FullBlockRuntimeIDTableFromGameData creates a block runtime ID table containing all known downgraded block states.
 func FullBlockRuntimeIDTableFromGameData(data minecraft.GameData) (*bwo_block.BlockRuntimeIDTable, error) {
+	full.Init()
 	customBlocks := append([]protocol.BlockEntry{}, data.CustomBlocks...)
-	table := bwo_block.NewBlockRuntimeIDTableFromStates(full.BlockStates, data.UseBlockNetworkIDHashes)
+	table := bwo_block.NewBlockRuntimeIDTableFromStates(block_utils.CloneBlockStates(full.BlockStates), data.UseBlockNetworkIDHashes)
 	existHashSet := make(map[uint32]struct{})
 
 	for _, state := range full.BlockStates {
@@ -71,7 +73,7 @@ func FullBlockRuntimeIDTableFromGameData(data minecraft.GameData) (*bwo_block.Bl
 
 		err := table.RegisterCustomBlock(bwo_define.BlockState{
 			Name:       blockEntry.Name,
-			Properties: blockEntry.Properties,
+			Properties: block_utils.CloneProperties(blockEntry.Properties),
 			Version:    protocol.CurrentProfile.BlockStateVersion(),
 		})
 		if err != nil {

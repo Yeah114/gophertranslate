@@ -2,13 +2,14 @@ package utils
 
 import (
 	"github.com/Yeah114/bedrock-world-operator/define"
+	block_utils "github.com/Yeah114/gopherconvert/minecraft/world/block/utils"
 	"github.com/Yeah114/gophertunnel/minecraft/protocol"
 )
 
 func BlockStateToBlockEntry(state define.BlockState) protocol.BlockEntry {
 	return protocol.BlockEntry{
 		Name:       state.Name,
-		Properties: state.Properties,
+		Properties: block_utils.CloneProperties(state.Properties),
 	}
 }
 

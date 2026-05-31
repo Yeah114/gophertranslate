@@ -47,6 +47,29 @@ func TestBlockConverterConvertClientBlockRuntimeIDMissing(t *testing.T) {
 	}
 }
 
+func TestBlockConverterDoesNotMutateRuntimeTableProperties(t *testing.T) {
+	converter := newTestBlockConverter(t, protocol.Protocol1v26v0, protocol.Protocol1v21v90)
+	runtimeID, found := converter.clientTable.StateToRuntimeID("minecraft:lightning_rod", map[string]any{
+		"facing_direction": int32(0),
+		"powered_bit":      byte(0),
+	})
+	if !found {
+		t.Fatal("failed to find lightning rod runtime ID")
+	}
+
+	for range 2 {
+		if _, ok := converter.ConvertClientBlockRuntimeID(runtimeID); !ok {
+			t.Fatal("expected runtime ID conversion to succeed")
+		}
+		if _, found := converter.clientTable.StateToRuntimeID("minecraft:lightning_rod", map[string]any{
+			"facing_direction": int32(0),
+			"powered_bit":      byte(0),
+		}); !found {
+			t.Fatal("runtime table properties were mutated by conversion")
+		}
+	}
+}
+
 func newTestBlockConverter(t *testing.T, clientProtocol, serverProtocol int32) *BlockConverter {
 	t.Helper()
 	clientConstructor, ok := Pool[clientProtocol]
